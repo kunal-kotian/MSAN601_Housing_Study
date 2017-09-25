@@ -1,0 +1,12 @@
+---
+title: "MSAN 601 Case Study"
+author: "Alvira Swalin, Kunal Kotian, Sooraj Subrahmannian, Vinay Patlolla"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: pdf_document
+---
+
+```{r setup, include = FALSE, echo = TRUE}
+# Prevent comments from running off the page (force line-wrapping for comments)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+```
+
