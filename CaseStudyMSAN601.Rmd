@@ -21,7 +21,7 @@ library(magrittr)
 
 ```{r}
 # Load housing data
-housing <- read.csv('housing.txt')
+housing <- read.csv('housing.txt', stringsAsFactors = FALSE)
 housing <- tbl_df(housing)
 ```
 
@@ -35,11 +35,40 @@ Sooraj
 
 
 -----------------------------------------------------------
-VInay
+Vinay
 
 
 ```{r}
+na_count <- colSums(is.na(housing))/nrow(housing)
+knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
+             caption = "Ratio of NAs before cleaning")
+```
 
+##Cleaning Data
+
+```{r}
+housing$PoolQC[is.na(housing$PoolQC)] <- 'No Pool'
+housing$Alley[is.na(housing$Alley)] <- 'No Alley'
+housing$MiscFeature[is.na(housing$MiscFeature)] <- 'None'
+housing$Fence[is.na(housing$Fence)] <- 'No Fence'
+housing$FireplaceQu[is.na(housing$FireplaceQu)] <- 'No Fireplace'
+#housing$LotFrontage[is.na(housing$LotFrontage)] <- 'No Lot'
+housing$GarageType[is.na(housing$GarageType)] <- 'No Garage'
+#housing$GarageYrBlt[is.na(housing$GarageYrBlt)] <- 'No Garage'
+#housing$GarageFinish[is.na(housing$GarageFinish)] <- 'No Garage'
+housing$GarageQual[is.na(housing$GarageQual)] <- 'No Garage'
+housing$GarageCond[is.na(housing$GarageCond)] <- 'No Garage'
+housing$BsmtExposure[is.na(housing$BsmtExposure)] <- 'No Basement'
+housing$BsmtQual[is.na(housing$BsmtQual)] <- 'No Basement'
+housing$BsmtCond[is.na(housing$BsmtCond)] <- 'No Basement'
+housing$BsmtFinType1[is.na(housing$BsmtFinType1)] <- 'No Basement'
+housing$BsmtFinType2[is.na(housing$BsmtFinType2)] <- 'No Basement'
+```
+
+```{r}
+na_count <- colSums(is.na(housing))/nrow(housing)
+knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
+             caption = "Ratio of NAs after cleaning")
 ```
 
 
