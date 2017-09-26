@@ -10,3 +10,39 @@ output: pdf_document
 knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
 ```
 
+
+```{r}
+# Load required packages
+library(tidyverse)
+library(magrittr)
+```
+
+# Cleaning the Dataset
+
+```{r}
+# Load housing data
+housing <- read.csv('housing.txt')
+housing <- tbl_df(housing)
+```
+
+-----------------------------------------------------------
+Sooraj
+
+```{r}
+
+```
+
+
+
+-----------------------------------------------------------
+VInay
+
+
+```{r}
+
+```
+
+
+
+-----------------------------------------------------------
+Kunal - conversion to factors
