@@ -1,0 +1,34 @@
+---
+title: "LR project"
+author: "Sooraj Mangalath Subrahmannian"
+date: "9/25/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+
+
+```
+
+```{r}
+housing <-  read.csv('housing.csv')
+housing <- tbl_df(housing)
+glimpse(housing)
+```
+
+
+```{r}
+napercent <- as.data.frame(unlist(lapply(housing,function(x) sum(is.na(x)))))/1460
+colnames(napercent) <- 'NA_percent'
+napercent1 <- napercent[napercent$NA_percent>0.8,,drop=F] 
+napercent1
+
+```
+
+
+
