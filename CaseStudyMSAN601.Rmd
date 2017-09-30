@@ -11,10 +11,12 @@ knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
 ```
 
 
-```{r}
+```{r message=F}
 # Load required packages
 library(tidyverse)
 library(magrittr)
+library(glmnet)
+library(ISLR)
 ```
 
 # Cleaning the Dataset
@@ -24,15 +26,6 @@ library(magrittr)
 housing <- read.csv('housing.txt', stringsAsFactors = FALSE)
 housing <- tbl_df(housing)
 ```
-
------------------------------------------------------------
-Sooraj
-
-```{r}
-
-```
-
-
 
 -----------------------------------------------------------
 Vinay
@@ -71,18 +64,12 @@ knitr::kable(sort(na_count[na_count > 0], decreasing = T),
              caption = "Ratio of NAs after cleaning")
 ```
 
-
-
 -----------------------------------------------------------
 Alvira
 
 
 
 ```{r}
-
-
-library(glmnet)
-library(ISLR)
 grid.lambda <- 10^seq(10, -2, length = 100)
 housing = na.omit(housing)
 housing = housing[,c(-1,-10)]

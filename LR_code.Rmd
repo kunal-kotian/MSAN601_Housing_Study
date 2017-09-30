@@ -11,14 +11,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
-
-
 ```
 
 ```{r}
-housing <-  read.csv('housing.csv')
+housing <-  read.csv('housing.txt')
 housing <- tbl_df(housing)
 glimpse(housing)
+```
+
+```{r}
+housing[housing$]
 ```
 
 
@@ -30,5 +32,8 @@ napercent1
 
 ```
 
+```{r}
+which(colnames(data)=='MiscFeature')
+```
 
 
