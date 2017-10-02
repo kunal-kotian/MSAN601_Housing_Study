@@ -69,6 +69,7 @@ housing$BsmtFinType2[is.na(housing$BsmtFinType2)] <- 'No Basement'
 na_count <- colSums(is.na(housing))/nrow(housing)
 knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
              caption = "Ratio of NAs after cleaning")
+
 ```
 
 
