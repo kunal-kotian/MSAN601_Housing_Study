@@ -56,6 +56,8 @@ housing$BsmtQual[is.na(housing$BsmtQual)] <- 'No Basement'
 housing$BsmtCond[is.na(housing$BsmtCond)] <- 'No Basement'
 housing$BsmtFinType1[is.na(housing$BsmtFinType1)] <- 'No Basement'
 housing$BsmtFinType2[is.na(housing$BsmtFinType2)] <- 'No Basement'
+housing$MasVnrType[is.na(housing$MasVnrType)] <- 'Missing Masonry Veneer'
+housing$Electrical[is.na(housing$Electrical)] <- 'Missing Electrical'
 ```
 
 ```{r}
@@ -63,6 +65,13 @@ na_count <- colSums(is.na(housing))/nrow(housing)
 knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
              caption = "Ratio of NAs after cleaning")
 
+```
+
+```{r}
+## Convert character columns to factors
+housing_imputed <- as.data.frame(unclass(housing))
+## Removing the data which has no year built
+housing_imputed <- housing_imputed[!is.na(housing_imputed$GarageYrBlt), ]
 ```
 
 -----------------------------------------------------------
