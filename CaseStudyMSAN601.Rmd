@@ -85,16 +85,16 @@ housing = na.omit(housing)
 housing = housing[,c(-1,-10)]
 x = model.matrix(SalePrice ~.,housing)[,-1]
 y = housing$SalePrice
-ridge.model <- glmnet(x, y, alpha = 1, lambda = grid.lambda)
-plot(ridge.model)
-cf = coef(ridge.model)
+lasso.model <- glmnet(x, y, alpha = 1, lambda = grid.lambda)
+plot(lasso.model)
+cf = coef(lasso.model)
 
 
 train <- sample(1:nrow(x), nrow(x) / 2)
 test <- (-train)
 y.train <- y[train]
 y.test <- y[test]
-ridge.model.train <- glmnet(x[train, ], y.train, alpha = 1, lambda = grid.lambda)
+lasso.model.train <- glmnet(x[train, ], y.train, alpha = 1, lambda = grid.lambda)
 cv.out <- cv.glmnet(x[train, ], y.train, alpha = 1)
 best.lambda <- cv.out$lambda.min
 plot(cv.out)
