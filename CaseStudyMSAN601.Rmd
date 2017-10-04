@@ -84,12 +84,29 @@ housing_imputed <- as.data.frame(unclass(housing))
 housing_imputed <- housing_imputed[!is.na(housing_imputed$GarageYrBlt), ]
 ## Im
 housing_imputed_mice <- mice(housing_imputed, m=1, method='cart', printFlag=FALSE)
-housing_imputed_mice <- complete(housing_imputed_mice)
+housing_imputed_mice <- mice::complete(housing_imputed_mice)
 summary(housing_imputed$MasVnrArea[!is.na(housing_imputed$MasVnrArea)])
 summary(housing_imputed_mice$MasVnrArea)
 sd(housing_imputed$MasVnrArea[!is.na(housing_imputed$MasVnrArea)])
 sd(housing_imputed_mice$MasVnrArea)
 ```
+
+---------------------------------------------------------------------------
+Test for normality
+
+```{r}
+# Fitting an OLS model
+
+
+# housing_imputed_mice1 <- housing_imputed_mice[, sapply(housing_imputed_mice, nlevels) > 1]
+# 
+# housing_imputed_mice2 <- housing_imputed_mice[, sapply(housing_imputed_mice, nlevels) <= 1]
+
+fit_for_normality <- lm(SalePrice ~ ., data = housing_imputed_mice)
+qqnorm(residuals(fit_for_normality), ylab="Residuals")
+qqline(residuals(fit_for_normality))
+```
+
 
 -----------------------------------------------------------
 Alvira
