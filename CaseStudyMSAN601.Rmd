@@ -17,6 +17,7 @@ library(tidyverse)
 library(magrittr)
 library(glmnet)
 library(ISLR)
+library(mice)
 ```
 
 # Cleaning the Dataset
