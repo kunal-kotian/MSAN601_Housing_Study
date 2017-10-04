@@ -18,6 +18,7 @@ library(magrittr)
 library(glmnet)
 library(ISLR)
 library(mice)
+library(MASS)
 ```
 
 # Cleaning the Dataset
@@ -107,6 +108,9 @@ Test for normality
 fit_for_normality <- lm(SalePrice ~ ., data = housing_cleaned)
 qqnorm(residuals(fit_for_normality), ylab="Residuals")
 qqline(residuals(fit_for_normality))
+boxcox(fit_for_normality) ##Since the 95% CI is closest to zero, log of Y is taken for transformation
+shapiro.test(fit_for_normality$residuals)
+housing_cleaned$SalePrice = log(housing_cleaned$SalePrice)
 ```
 
 
@@ -128,7 +132,8 @@ abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
 upper_limit_cooksd = 4*mean(cooksd, na.rm = T)
 index_influential = which(cooksd > upper_limit_cooksd)
 len_influential = length(index_influential)
-housing_without_influ = housing[-index_influential,]
+housing_without_influ = housing_cleaned[-index_influential,]
+housing_without_influ = housing_cleaned
 ```
 
 
@@ -162,12 +167,16 @@ X = X[,index_nonzeroCoeff]
 #Fitting OLS Model
 ols.fit = lm(y~X)
 ols.fit$coefficients
+qqnorm(residuals(ols.fit), ylab="Residuals")
+qqline(residuals(ols.fit))
+shapiro.test(ols.fit$residuals)
 # s = summary(ols.fit)
 significant_predictors = data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
 
 ```
 
 ```{r}
+
 
 
 ```
