@@ -132,8 +132,7 @@ abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
 upper_limit_cooksd = 4*mean(cooksd, na.rm = T)
 index_influential = which(cooksd > upper_limit_cooksd)
 len_influential = length(index_influential)
-housing_without_influ = housing_cleaned[-index_influential,]
-housing_without_influ = housing_cleaned
+housing_cleaned = housing_cleaned[-index_influential,]
 ```
 
 
@@ -167,17 +166,44 @@ X = X[,index_nonzeroCoeff]
 #Fitting OLS Model
 ols.fit = lm(y~X)
 ols.fit$coefficients
+
+#checking normality
 qqnorm(residuals(ols.fit), ylab="Residuals")
 qqline(residuals(ols.fit))
 shapiro.test(ols.fit$residuals)
-# s = summary(ols.fit)
+
+#s = summary(ols.fit)
 significant_predictors = data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
 
 ```
 
+## Prediction - Ridge
 ```{r}
 
+housing_cleaned = na.omit(housing_cleaned)
+housing_cleaned = housing_cleaned[,c(-1,-10)]
+X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
+y = housing_cleaned$SalePrice
 
+grid=10^seq(10,-2,length=100)
+
+
+#10 Fold Validation Ridge
+
+train <- sample(1:nrow(X), nrow(X)/2)
+test <- (-train)
+y.train <- y[train]
+y.test <- y[test]
+
+ridge.mod=glmnet(X[train,],y[train],alpha=0,lambda=grid)
+
+cv.out <- cv.glmnet(X[train,], y.train, alpha = 0)
+best.lambda <- cv.out$lambda.min
+plot(cv.out)
+abline(v = log(best.lambda), col = "blue", lwd = 2)
+
+ridge.pred=predict(ridge.mod,s=best.lambda ,newx=X[test,])
+mean((ridge.pred-y.test)^2)
 
 ```
 
