@@ -89,6 +89,8 @@ summary(housing_imputed$MasVnrArea[!is.na(housing_imputed$MasVnrArea)])
 summary(housing_imputed_mice$MasVnrArea)
 sd(housing_imputed$MasVnrArea[!is.na(housing_imputed$MasVnrArea)])
 sd(housing_imputed_mice$MasVnrArea)
+
+housing_cleaned = housing_imputed_mice
 ```
 
 ---------------------------------------------------------------------------
@@ -102,7 +104,7 @@ Test for normality
 # 
 # housing_imputed_mice2 <- housing_imputed_mice[, sapply(housing_imputed_mice, nlevels) <= 1]
 
-fit_for_normality <- lm(SalePrice ~ ., data = housing_imputed_mice)
+fit_for_normality <- lm(SalePrice ~ ., data = housing_cleaned)
 qqnorm(residuals(fit_for_normality), ylab="Residuals")
 qqline(residuals(fit_for_normality))
 ```
@@ -114,10 +116,10 @@ Alvira
 
 # Removing Influential Obervations
 ```{r}
-housing_imputed = na.omit(housing_naomit)
-housing_imputed = housing_imputed[,c(-1,-10)]
-X = model.matrix(SalePrice ~.,housing_imputed)[,-1]
-y = housing_imputed$SalePrice
+housing_cleaned = na.omit(housing_cleaned)
+housing_cleaned = housing_cleaned[,c(-1,-10)]
+X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
+y = housing_cleaned$SalePrice
 
 ols_model <- lm(y~X)
 cooksd <- cooks.distance(ols_model)
@@ -125,17 +127,17 @@ plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot c
 abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
 upper_limit_cooksd = 4*mean(cooksd, na.rm = T)
 index_influential = which(cooksd > upper_limit_cooksd)
-len_influentialn = length(index_influential)
-housing_rem_influ = housing[-index_influential,]
+len_influential = length(index_influential)
+housing_without_influ = housing[-index_influential,]
 ```
 
 
 ```{r}
 grid.lambda <- 10^seq(10, -2, length = 100)
-housing_imputed = na.omit(housing_naomit)
-housing_imputed = housing_imputed[,c(-1,-10)]
-X = model.matrix(SalePrice ~.,housing_imputed)[,-1]
-y = housing_imputed$SalePrice
+housing_cleaned = na.omit(housing_cleaned)
+housing_cleaned = housing_cleaned[,c(-1,-10)]
+X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
+y = housing_cleaned$SalePrice
 
 #10 Fold Validation Lasso Selection
 # train <- sample(1:nrow(X), nrow(X) / 2)
