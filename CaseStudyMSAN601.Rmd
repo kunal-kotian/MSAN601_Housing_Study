@@ -19,6 +19,7 @@ library(glmnet)
 library(ISLR)
 library(mice)
 library(MASS)
+library(car)
 ```
 
 # Cleaning the Dataset
@@ -42,30 +43,35 @@ knitr::kable(sort(na_count[na_count > 0], decreasing = T),
 ##Cleaning Data
 
 ```{r}
-housing$Id <- NULL
-housing$PoolQC[is.na(housing$PoolQC)] <- 'No Pool'
-housing$Alley[is.na(housing$Alley)] <- 'No Alley'
-housing$MiscFeature[is.na(housing$MiscFeature)] <- 'None'
-housing$Fence[is.na(housing$Fence)] <- 'No Fence'
-housing$FireplaceQu[is.na(housing$FireplaceQu)] <- 'No Fireplace'
-#housing$LotFrontage[is.na(housing$LotFrontage)] <- 'No Lot'
-housing$GarageType[is.na(housing$GarageType)] <- 'No Garage'
-#housing$GarageYrBlt[is.na(housing$GarageYrBlt)] <- 'No Garage'
-#housing$GarageFinish[is.na(housing$GarageFinish)] <- 'No Garage'
-housing$GarageQual[is.na(housing$GarageQual)] <- 'No Garage'
-housing$GarageCond[is.na(housing$GarageCond)] <- 'No Garage'
-housing$BsmtExposure[is.na(housing$BsmtExposure)] <- 'No Basement'
-housing$BsmtQual[is.na(housing$BsmtQual)] <- 'No Basement'
-housing$BsmtCond[is.na(housing$BsmtCond)] <- 'No Basement'
-housing$BsmtFinType1[is.na(housing$BsmtFinType1)] <- 'No Basement'
-housing$BsmtFinType2[is.na(housing$BsmtFinType2)] <- 'No Basement'
-housing$MasVnrType[is.na(housing$MasVnrType)] <- 'Missing Masonry Veneer'
-housing$Electrical[is.na(housing$Electrical)] <- 'Missing Electrical'
+clean_data <- function(df){
+  df$Id <- NULL
+  df$PoolQC[is.na(df$PoolQC)] <- 'No Pool'
+  df$Alley[is.na(df$Alley)] <- 'No Alley'
+  df$MiscFeature[is.na(df$MiscFeature)] <- 'None'
+  df$Fence[is.na(df$Fence)] <- 'No Fence'
+  df$FireplaceQu[is.na(df$FireplaceQu)] <- 'No Fireplace'
+  #df$LotFrontage[is.na(df$LotFrontage)] <- 'No Lot'
+  df$GarageType[is.na(df$GarageType)] <- 'No Garage'
+  #df$GarageYrBlt[is.na(df$GarageYrBlt)] <- 'No Garage'
+  #df$GarageFinish[is.na(df$GarageFinish)] <- 'No Garage'
+  df$GarageQual[is.na(df$GarageQual)] <- 'No Garage'
+  df$GarageCond[is.na(df$GarageCond)] <- 'No Garage'
+  df$BsmtExposure[is.na(df$BsmtExposure)] <- 'No Basement'
+  df$BsmtQual[is.na(df$BsmtQual)] <- 'No Basement'
+  df$BsmtCond[is.na(df$BsmtCond)] <- 'No Basement'
+  df$BsmtFinType1[is.na(df$BsmtFinType1)] <- 'No Basement'
+  df$BsmtFinType2[is.na(df$BsmtFinType2)] <- 'No Basement'
+  df$MasVnrType[is.na(df$MasVnrType)] <- 'Missing Masonry Veneer'
+  df$Electrical[is.na(df$Electrical)] <- 'Missing Electrical'
+  return(df)
+}
 ```
 
 ```{r}
+housing <- clean_data(housing)
 table(housing$Utilities)
 ```
+
 ```{r}
 housing$Utilities <- NULL
 ```
@@ -79,65 +85,88 @@ knitr::kable(sort(na_count[na_count > 0], decreasing = T),
 ```
 
 ```{r}
-## Convert character columns to factors
-housing_imputed <- as.data.frame(unclass(housing))
-## Removing the data which has no year built
-housing_imputed <- housing_imputed[!is.na(housing_imputed$GarageYrBlt), ]
-## Im
-housing_imputed_mice <- mice(housing_imputed, m=1, method='cart', printFlag=FALSE)
-housing_imputed_mice <- mice::complete(housing_imputed_mice)
-summary(housing_imputed$MasVnrArea[!is.na(housing_imputed$MasVnrArea)])
-summary(housing_imputed_mice$MasVnrArea)
-sd(housing_imputed$MasVnrArea[!is.na(housing_imputed$MasVnrArea)])
-sd(housing_imputed_mice$MasVnrArea)
-housing_cleaned = housing_imputed_mice
+impute_data <- function(df){
+  ## Convert character columns to factors
+  df_imputed <- as.data.frame(unclass(df))
+  ## Removing the data which has no year built
+  df_imputed <- df_imputed[!is.na(df_imputed$GarageYrBlt), ]
+  ## Imputing missing data with mice
+  df_cleaned <- mice(df_imputed, m=1, method='cart', printFlag=FALSE)
+  df_cleaned <- mice::complete(df_cleaned)
+  df_cleaned
+}
+housing_cleaned <- impute_data(housing)
 ```
 
----------------------------------------------------------------------------
-Test for normality
-
 ```{r}
-# Fitting an OLS model
-
-
-# housing_imputed_mice1 <- housing_imputed_mice[, sapply(housing_imputed_mice, nlevels) > 1]
-# 
-# housing_imputed_mice2 <- housing_imputed_mice[, sapply(housing_imputed_mice, nlevels) <= 1]
-
-fit_for_normality <- lm(SalePrice ~ ., data = housing_cleaned)
-qqnorm(residuals(fit_for_normality), ylab="Residuals")
-qqline(residuals(fit_for_normality))
-boxcox(fit_for_normality) ##Since the 95% CI is closest to zero, log of Y is taken for transformation
-shapiro.test(fit_for_normality$residuals)
-housing_cleaned$SalePrice = log(housing_cleaned$SalePrice)
-housing_cleaned = na.omit(housing_cleaned)
-housing_cleaned = housing_cleaned[,c(-1,-10)]
+summary_area_df <- as.data.frame(unclass(summary(
+  housing$MasVnrArea[!is.na(housing$MasVnrArea)])))
+colnames(summary_area_df) <- "value"
+knitr::kable(summary_area_df, caption = "MasVnrArea column statistics before imputing")
+summary_area_clean_df <- as.data.frame(unclass(summary(
+  housing_cleaned$MasVnrArea[!is.na(housing$MasVnrArea)])))
+colnames(summary_area_clean_df) <- "value"
+knitr::kable(summary_area_clean_df,caption = "MasVnrArea column statistics after imputing")
+sd(housing$MasVnrArea[!is.na(housing$MasVnrArea)])
+sd(housing_cleaned$MasVnrArea)
 ```
 
+---------------------------
 
------------------------------------------------------------
-
-Alvira
-
-# Removing Influential Obervations
+Influential points(Removed once)
 ```{r}
-
 X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
-Xtest = X[nrow(housing_cleaned),]
-X = X[-nrow(housing_cleaned),]
-y = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
-yMorty = housing_cleaned$SalePrice[nrow(housing_cleaned)]
-
-ols_model <- lm(y~X)
-cooksd <- cooks.distance(ols_model)
-plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
-abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
-upper_limit_cooksd = 4*mean(cooksd, na.rm = T)
-index_influential = which(cooksd > upper_limit_cooksd)
-len_influential = length(index_influential)
+y = housing_cleaned$SalePrice
+fit <-  lm(y ~ X)
+n <- nrow(X)
+k <- length(fit$coefficients)-1
+cv <- 2*sqrt(k/n)
+plot(dffits(fit), 
+     ylab = "Standardized dfFits", xlab = "Index", 
+     main = paste("Standardized DfFits, \n critical value = 2*sqrt(k/n) = +/-", round(cv,3)),ylim = c(-5,5))
+abline(h = cv, lty = 2)
+abline(h = -cv, lty = 2)
+index_influential = which(dffits(fit)> cv | dffits(fit)< -cv)
 housing_cleaned = housing_cleaned[-index_influential,]
 ```
 
+---------------------------------------------------------------------------
+
+Check for normality
+
+```{r}
+X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
+
+y = housing_cleaned$SalePrice
+fit <-  lm(y ~ X)
+resi <-  residuals(fit)
+fitvalues <- fitted.values(fit)
+plot(fitvalues,resi)
+stdresi <- scale(resi)
+qqnorm(stdresi, ylab="Residuals")
+qqline(stdresi)
+
+ks.test(stdresi, rnorm(length(stdresi)))
+boxcox(fit)
+```
+
+Check for normality after transformation
+```{r}
+ylog = ((y^0.5 )-1)/0.5
+fit <-  lm(ylog ~ X)
+resi <-  residuals(fit)
+fitvalues <- fitted.values(fit)
+plot(fitvalues,resi)
+stdresi <- scale(resi)
+qqnorm(stdresi, ylab="Residuals")
+qqline(stdresi)
+
+ks.test(stdresi, rnorm(length(stdresi)))
+
+```
+
+---------------
+Alvira
 
 ```{r}
 
@@ -248,8 +277,8 @@ Multicollinearity
 #       pi <- (V[j][k]^2)/(singular_values[k]^2)
 #       sum <- sum + /singular_values[j]^2
 # }}
-X$y <- y
-vif(lm(y ~ ., data = X)) ## Detecting perfect multicollinearity
+#X$y <- y
+#vif(lm(y ~ ., data = X)) ## Detecting perfect multicollinearity
 ```
 
 
