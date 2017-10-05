@@ -1,0 +1,148 @@
+---
+title: "Casestudy"
+author: "Sooraj Mangalath Subrahmannian"
+date: "10/4/2017"
+output: pdf_document
+---
+
+```{r setup, include = FALSE, echo = TRUE}
+# Prevent comments from running off the page (force line-wrapping for comments)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+```
+
+
+```{r message=F, warning=F}
+# Load required packages
+library(tidyverse)
+library(magrittr)
+library(glmnet)
+library(ISLR)
+library(mice)
+library(MASS)
+```
+
+# Cleaning the Dataset
+
+```{r}
+# Load housing data
+housing <- read.csv('housing.txt', stringsAsFactors = FALSE)
+housing <- tbl_df(housing)
+```
+
+-----------------------------------------------------------
+Vinay
+
+
+```{r}
+na_count <- colSums(is.na(housing))/nrow(housing)
+knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
+             caption = "Ratio of NAs before cleaning")
+```
+
+##Cleaning Data
+
+```{r}
+housing$Id <- NULL
+housing$PoolQC[is.na(housing$PoolQC)] <- 'No Pool'
+housing$Alley[is.na(housing$Alley)] <- 'No Alley'
+housing$MiscFeature[is.na(housing$MiscFeature)] <- 'No MiscFeature'
+housing$Fence[is.na(housing$Fence)] <- 'No Fence'
+housing$FireplaceQu[is.na(housing$FireplaceQu)] <- 'No Fireplace'
+#housing$LotFrontage[is.na(housing$LotFrontage)] <- 'No Lot'
+housing$GarageType[is.na(housing$GarageType)] <- 'No Garage'
+#housing$GarageYrBlt[is.na(housing$GarageYrBlt)] <- 'No Garage'
+#housing$GarageFinish[is.na(housing$GarageFinish)] <- 'No Garage'
+housing$GarageQual[is.na(housing$GarageQual)] <- 'No Garage'
+housing$GarageCond[is.na(housing$GarageCond)] <- 'No Garage'
+housing$BsmtExposure[is.na(housing$BsmtExposure)] <- 'No Basement'
+housing$BsmtQual[is.na(housing$BsmtQual)] <- 'No Basement'
+housing$BsmtCond[is.na(housing$BsmtCond)] <- 'No Basement'
+housing$BsmtFinType1[is.na(housing$BsmtFinType1)] <- 'No Basement'
+housing$BsmtFinType2[is.na(housing$BsmtFinType2)] <- 'No Basement'
+housing$MasVnrType[is.na(housing$MasVnrType)] <- 'Missing Masonry Veneer'
+housing$Electrical[is.na(housing$Electrical)] <- 'Missing Electrical'
+```
+
+```{r}
+table(housing$Utilities)
+```
+
+```{r}
+housing$Utilities <- NULL
+```
+
+
+```{r}
+na_count <- colSums(is.na(housing))/nrow(housing)
+knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
+             caption = "Ratio of NAs after cleaning",col.names ='Ratio of NAs')
+
+```
+
+```{r}
+## Convert character columns to factors
+housing_imputed <- as.data.frame(unclass(housing))
+## Removing the data which has no year built
+housing_imputed <- housing_imputed[!is.na(housing_imputed$GarageYrBlt), ]
+## Im
+housing_imputed_mice <- mice(housing_imputed, m=1, method='cart', printFlag=FALSE)
+housing_imputed_mice <- mice::complete(housing_imputed_mice)
+summary(housing_imputed$MasVnrArea[!is.na(housing_imputed$MasVnrArea)])
+summary(housing_imputed_mice$MasVnrArea)
+sd(housing_imputed$MasVnrArea[!is.na(housing_imputed$MasVnrArea)])
+sd(housing_imputed_mice$MasVnrArea)
+
+housing_cleaned = housing_imputed_mice
+```
+
+
+Influential points
+Removal once
+```{r}
+X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
+y = housing_cleaned$SalePrice
+fit <-  lm(y ~ X)
+n <- nrow(X)
+k <- length(fit$coefficients)-1
+cv <- 2*sqrt(k/n)
+plot(dffits(fit), 
+     ylab = "Standardized dfFits", xlab = "Index", 
+     main = paste("Standardized DfFits, \n critical value = 2*sqrt(k/n) = +/-", round(cv,3)),ylim = c(-5,5))
+abline(h = cv, lty = 2)
+abline(h = -cv, lty = 2)
+index_influential = which(dffits(fit)> cv | dffits(fit)< -cv)
+housing_cleaned = housing_cleaned[-index_influential,]
+```
+Check for normality
+
+```{r}
+X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
+
+y = housing_cleaned$SalePrice
+fit <-  lm(y ~ X)
+resi <-  residuals(fit)
+fitvalues <- fitted.values(fit)
+plot(fitvalues,resi)
+stdresi <- scale(resi)
+qqnorm(stdresi, ylab="Residuals")
+qqline(stdresi)
+
+ks.test(stdresi, rnorm(length(stdresi)))
+boxcox(fit)
+```
+Check for normality after transformation
+```{r}
+ylog = ((y^0.5 )-1)/0.5
+fit <-  lm(ylog ~ X)
+resi <-  residuals(fit)
+fitvalues <- fitted.values(fit)
+plot(fitvalues,resi)
+stdresi <- scale(resi)
+qqnorm(stdresi, ylab="Residuals")
+qqline(stdresi)
+
+ks.test(stdresi, rnorm(length(stdresi)))
+
+```
+
+
