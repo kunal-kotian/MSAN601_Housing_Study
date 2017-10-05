@@ -226,6 +226,31 @@ diff
 
 
 
+Multicollinearity
+
+```{r}
+# x_cont <- X[,setdiff(1:70, grep("\\d", colnames(X)))]
+# x_svd <- svd(scale(x_cont))
+# singular_values <- x_svd$d
+# V <- x_svd$V
+# tau_values <- max(singular_values)/singular_values
+# high_mc_indices <- which(tau_values > 30)
+# count <- 0
+# sum_vj <- c()
+# for(j in 1:nrow(X)){
+#   for (l in 1:ncol(X)){
+#   sum_vj <- V[j][l]
+#   }
+# }
+# for(k in high_mc_indices){
+#   sum <- 0
+#   for(j in 1:ncol(X)){
+#       pi <- (V[j][k]^2)/(singular_values[k]^2)
+#       sum <- sum + /singular_values[j]^2
+# }}
+X$y <- y
+vif(lm(y ~ ., data = X)) ## Detecting perfect multicollinearity
+```
 
 
 
