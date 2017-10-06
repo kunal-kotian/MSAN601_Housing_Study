@@ -127,16 +127,16 @@ Influential points(Removed once)
 ```{r}
 X_influential = model.matrix(SalePrice ~., housing_cleaned)[,-1]
 y = housing_cleaned$SalePrice
-fit <-  lm(y ~ X_influential)
+fit_influential_pts <-  lm(y ~ X_influential)
 n <- nrow(X_influential)
-k <- length(fit$coefficients)-1
+k <- length(fit_influential_pts$coefficients)-1
 cv <- 2*sqrt(k/n)
-plot(dffits(fit), 
+plot(dffits(fit_influential_pts), 
      ylab = "Standardized dfFits", xlab = "Index", 
      main = paste("Standardized DfFits, \n critical value = 2*sqrt(k/n) = +/-", round(cv,3)),ylim = c(-5,5))
 abline(h = cv, lty = 2)
 abline(h = -cv, lty = 2)
-index_influential = which(dffits(fit)> cv | dffits(fit)< -cv)
+index_influential = which(dffits(fit_influential_pts)> cv | dffits(fit_influential_pts)< -cv)
 housing_cleaned = housing_cleaned[-index_influential,]
 ```
 
@@ -147,63 +147,37 @@ Check for normality
 ```{r}
 X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
 y = housing_cleaned$SalePrice
-fit <-  lm(y ~ X)
-resi <-  residuals(fit)
-fitvalues <- fitted.values(fit)
+fit_normality <-  lm(y ~ X)
+resi <-  residuals(fit_normality)
+fitvalues <- fitted.values(fit_normality)
 plot(fitvalues,resi)
 stdresi <- scale(resi)
 qqnorm(stdresi, ylab="Residuals")
 qqline(stdresi)
 ks.test(stdresi, rnorm(length(stdresi)))
-boxcox(fit)
+boxcox(fit_normality)
 ```
 
 Check for normality after transformation
 ```{r}
 ylog = ((y^0.5 )-1)/0.5
-fit <-  lm(ylog ~ X)
-resi <-  residuals(fit)
-fitvalues <- fitted.values(fit)
-plot(fitvalues,resi)
+fit_normality_trans <-  lm(ylog ~ X)
+resi <-  residuals(fit_normality_trans)
+fitvalues_trans <- fitted.values(fit_normality_trans)
+plot(fitvalues_trans,resi)
 stdresi <- scale(resi)
 qqnorm(stdresi, ylab="Residuals")
 qqline(stdresi)
-
 ks.test(stdresi, rnorm(length(stdresi)))
-
 ```
 
----------------
-Kunal's New Lasso Code
+Lasso Variable Selection
 ```{r}
+X_lasso = X[-nrow(housing_cleaned),]
+y_lasso = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
+grid.lambda <- 10^seq(10, -2, length = 1000)
+fit_lasso <- glmnet(X, y, alpha = 1, lambda = grid.lambda)
 
-
-```
-
-
-
----------------
-Alvira
-
-```{r}
-# 
-# 
-# X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
-# 
-# X = X[-nrow(housing_cleaned),]
-# y = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
-# 
-# 
-# 
-# grid.lambda <- 10^seq(10, -2, length = 100)
-# 
-# #10 Fold Validation Lasso Selection
-# # train <- sample(1:nrow(X), nrow(X) / 2)
-# # test <- (-train)
-# # y.train <- y[train]
-# # y.test <- y[test]
-# lasso.model.train <- glmnet(X, y, alpha = 1, lambda = grid.lambda)
-# 
 # cv.out <- cv.glmnet(X, y, alpha = 1)
 # best.lambda <- cv.out$lambda.min
 # plot(cv.out)
