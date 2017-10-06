@@ -5,7 +5,7 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: pdf_document
 ---
 
-```{r setup, include = FALSE, echo = TRUE}
+```{r setup, include = FALSE, echo = F}
 # Prevent comments from running off the page (force line-wrapping for comments)
 knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
 ```
@@ -30,12 +30,9 @@ library(MASS)
 library(car)
 library(VIM)
 set.seed(1)
-
 ```
 
-# Cleaning the Housing Dataset
-
-```{r}
+```{r echo=F}
 # Load housing data
 housing <- read.csv('housing.txt', stringsAsFactors = FALSE)
 Mortydata <- read.csv('Morty.txt',stringsAsFactors = F)
@@ -43,23 +40,28 @@ housing <- rbind(housing,Mortydata[,-1])
 housing <- tbl_df(housing)
 ```
 
------------------------------------------------------------
-Vinay
+# Cleaning the Housing Dataset
 
+The data loaded from `housing.txt` contained several missing values (`NA`s).  The table below shows a summary of the proportion of `NA`s in each column.
 
-```{r}
+```{r echo=FALSE}
 # Counting ratio of NA's in each column
 na_count <- colSums(is.na(housing))/nrow(housing)
 # Summarising the columns which have NA count > 0
 knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
              caption = "Ratio of NAs before cleaning")
-mice_plot <- aggr(housing, col=c('navyblue','red'),
-                    numbers=T, sortVars=TRUE,
-                    labels=names(housing), cex.axis=.7,
-                    gap=3, ylab=c("Missing data","Pattern"),combined =F)
 ```
 
-##Cleaning Data
+
+```{r echo=F fig1, fig.cap="Overview of the missing data"}
+mice_plot <- aggr(housing, col = c('navyblue','red'),
+                  numbers = T, sortVars = TRUE, 
+                  labels = names(housing), cex.axis = .7,
+                  gap = 3, ylab = c("Missing data","Pattern"), combined = F)
+```
+
+
+## Cleaning Data
 
 ```{r}
 # Defining function clean data which cleans the dataset
