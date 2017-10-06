@@ -28,7 +28,9 @@ library(ISLR)
 library(mice)
 library(MASS)
 library(car)
+library(VIM)
 set.seed(1)
+
 ```
 
 # Cleaning the Housing Dataset
@@ -51,6 +53,10 @@ na_count <- colSums(is.na(housing))/nrow(housing)
 # Summarising the columns which have NA count > 0
 knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
              caption = "Ratio of NAs before cleaning")
+mice_plot <- aggr(housing, col=c('navyblue','red'),
+                    numbers=T, sortVars=TRUE,
+                    labels=names(housing), cex.axis=.7,
+                    gap=3, ylab=c("Missing data","Pattern"),combined =F)
 ```
 
 ##Cleaning Data
