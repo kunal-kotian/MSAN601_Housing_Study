@@ -183,16 +183,18 @@ index_influential = which(dffits(fit_influential_pts) > cv | dffits(fit_influent
 housing_cleaned = housing_cleaned[-index_influential,]
 ```
 
+## Wrapping Up Data Clean-up
 
-Checking for redundant columns
-```{r}
+After the imputation/removal of missing values and removal of influential observations, only one level under `Utilities` was left in the dataset.  Since this made `Utilities` a redundant variable, it was removed altogether from the dataset.
+
+```{r echo=FALSE, warning=F, message=F}
 # Checking if any column has only 1 level after removing influential points
 count_uniques <- sapply(housing_cleaned, function(x){ length(unique(x)) })
-count_uniques[count_uniques == 1]
-table(housing_cleaned$Utilities)
+# count_uniques[count_uniques == 1]
+# table(housing_cleaned$Utilities)
 ```
 
-```{r}
+```{r echo=FALSE, warning=F, message=F}
 # As we can observe Utilities has only 1 level after removing influential points,
 # so we can remove the 'Utilities' column from our data set
 housing_cleaned$Utilities <- NULL
