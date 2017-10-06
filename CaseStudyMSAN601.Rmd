@@ -300,8 +300,8 @@ ks.test(stdresi, rnorm(length(stdresi)))
 qqnorm(stdresi, ylab = "Residuals")
 qqline(stdresi)
 ```
-Since the normality assumption is valid, we can now run an Ordinary least squares on the reduced set of varaibles from Lasso. 
-We can then extract a subset of variables which are statistically significant. This model can be used to explain the Salesprice.
+Since the normality assumption is valid, an Ordinary least squares is run on the reduced set of varaibles from Lasso. 
+A subset of variables is extracted from the lasso reduced variable dataset, which are statistically significant. This model can be used to explain the Salesprice.
 
 ```{r}
 myDf <- data.frame(y_sqrt = y_sqrt, X_lasso)
@@ -326,6 +326,8 @@ knitr::kable(Y_pred_Morty, caption = "95% Confidence Interval of Morty's house")
 \pagebreak
 
 ## Plotting pairwise collinearity
+After obtaining the important variables, mutlicollinearity was checked using two analysis. A pairwise correlation plot of all the important variables were observed. We didnot observe any high pairwise correlation. We further analysed the data for multicollinearity using Variability Inflation Factor(VIF), but we 
+
 ```{r fig9, fig.cap = "Pairwise correlation plot", fig.height = 10, fig.width = 10}
 pairwise_cors <- cor(X_lasso)
 corrplot(pairwise_cors)
