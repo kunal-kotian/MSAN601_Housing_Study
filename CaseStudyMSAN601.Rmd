@@ -198,18 +198,16 @@ Lasso Variable Selection
 ```{r}
 X_lasso = X[-nrow(housing_cleaned),]
 y_lasso = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
-grid.lambda <- 10^seq(10, -2, length = 1000)
-fit_lasso <- glmnet(X_lasso, y_lasso, alpha = 1, lambda = grid.lambda)
+# grid.lambda <- 10^seq(5, -2, length = 1000)
+# fit_lasso <- glmnet(X_lasso, y_lasso, alpha = 1, lambda = grid.lambda)
 # make predictions
-y_lasso_hat <- predict(fit_lasso, X_lasso, type="response")
-# summarize accuracy
-mse_lasso <- colMeans((y_lasso - y_lasso_hat)^2)
-
-
-
-# cv.out <- cv.glmnet(X, y, alpha = 1)
-# best.lambda <- cv.out$lambda.min
-# plot(cv.out)
+# y_lasso_hat <- predict(fit_lasso, X_lasso, type="response")
+# # summarize accuracy
+# mse_lasso <- colMeans((y_lasso - y_lasso_hat)^2)
+set.seed(10)
+cv.out <- cv.glmnet(X_lasso, y_lasso, alpha = 1)
+best.lambda <- cv.out$lambda.min
+plot(cv.out)
 # abline(v = log(best.lambda), col = "blue", lwd = 2)
 # 
 # lasso.model_best.lambda = glmnet(X, y, alpha = 1, lambda = best.lambda)
