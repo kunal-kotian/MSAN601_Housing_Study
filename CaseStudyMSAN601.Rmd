@@ -103,7 +103,7 @@ clean_data <- function(df){
 
 Table 2 shows a summary of the missing values left in the dataset after the `NA`-replacement process described here was completed.  The missing values in variables `LotFrontage` and `MasVnrArea` were imputed using the package `mice`.
 
-`NA`s in `GarageYrBlt` and `GarageFinish` represent the cases in which a house does not have any garage. Imputing such missing values does not make sense i.e there is no proper way to represent these observations.  Hence, all rows with `NA`s in `GarageYrBlt` or `GarageFinish` were deleted.  Thus, we end up with a cleaned dataset that has no missing values.
+`NA`s in `GarageYrBlt` and `GarageFinish` represent the cases in which a house does not have any garage. Imputing such missing values does not make sense i.e there is no proper way to represent these observations.  Hence, all rows with `NA`s in `GarageYrBlt` or `GarageFinish` were deleted.  Thus, we end up with a dataset that has no missing values.
 
 ```{r echo=FALSE, warning=F, message=F}
 # Applying clean data function on housing data set
@@ -163,6 +163,8 @@ colnames(summary_area_clean_df) <- "value"
 
 
 ## Influential Points
+
+Influential observations are those observations that have a distorting influence on a fitted linear regression model.  Influential points can end up adversely affecting the entire data analysis leading to incorrect conclusions.  Hence, before delving into further analysis, influential observations in the `housing` dataset were detected and removed. 
 
 ```{r}
 X_influential = model.matrix(SalePrice ~., housing_cleaned)[,-1]
@@ -253,6 +255,7 @@ Y_pred_Morty <- predict(ols.fit, data.frame(XMorty), interval="confidence", leve
 ```
 
 Check for normality before tranformation
+
 ```{r}
 resi <- residuals(ols.fit)
 fitvalues <- fitted.values(ols.fit)
