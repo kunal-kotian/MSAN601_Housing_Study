@@ -5,7 +5,7 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: pdf_document
 ---
 
-```{r setup, include = FALSE, echo = F}
+```{r setup, include = FALSE, echo = TRUE}
 # Prevent comments from running off the page (force line-wrapping for comments)
 knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
 ```
@@ -29,10 +29,14 @@ library(mice)
 library(MASS)
 library(car)
 library(VIM)
+library(corrplot)
 set.seed(1)
+
 ```
 
-```{r echo=F}
+# Cleaning the Housing Dataset
+
+```{r}
 # Load housing data
 housing <- read.csv('housing.txt', stringsAsFactors = FALSE)
 Mortydata <- read.csv('Morty.txt',stringsAsFactors = F)
@@ -40,32 +44,23 @@ housing <- rbind(housing,Mortydata[,-1])
 housing <- tbl_df(housing)
 ```
 
-# Cleaning the Housing Dataset
+-----------------------------------------------------------
+Vinay
 
-## Missing Values
 
-The data loaded from `housing.txt` contained several missing values (`NA`s).  Table 1 shows a summary of the proportion of `NA`s in each column.  Figure 1 shows a visual overview of the missing data.
-
-```{r echo=FALSE}
+```{r}
 # Counting ratio of NA's in each column
-na_count <- ((colSums(is.na(housing))/nrow(housing)) * 100) %>% round(1)
+na_count <- colSums(is.na(housing))/nrow(housing)
 # Summarising the columns which have NA count > 0
 knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
              caption = "Ratio of NAs before cleaning")
+mice_plot <- aggr(housing, col=c('navyblue','red'),
+                    numbers=T, sortVars=TRUE,
+                    labels=names(housing), cex.axis=.7,
+                    gap=3, ylab=c("Missing data","Pattern"),combined =F)
 ```
 
-
-```{r fig1, fig.cap="Overview of the missing data", echo=F}
-mice_plot <- aggr(housing, col = c('navyblue','red'),
-                  numbers = T, sortVars = TRUE, 
-                  labels = names(housing), cex.axis = .7,
-                  gap = 3, ylab = c("Missing data","Pattern"), combined = F)
-```
-
-
-### Missing Values Which Are Not Really Missing
-
-In the case of several categorical variables, the data dictionary stated that `NA` represented a specific category denoting the absence of the entity tracked by the 
+##Cleaning Data
 
 ```{r}
 # Defining function clean data which cleans the dataset
@@ -250,25 +245,15 @@ myDf <- data.frame(y_lasso = y_lasso, X_lasso)
 #Fitting OLS Model
 ols.fit <- lm(y_lasso~., data=myDf)
 #ols.fit$coefficients
-
-
 Y_pred_Morty <- predict(ols.fit, data.frame(XMorty), interval="confidence", level = 0.95)
-
-
-#s <- summary(ols.fit)
-#significant_predictors <- data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
-
-
-#X_lasso_significant <- X_lasso[, rownames(significant_predictors)[-1]]
-
 ```
 
 Check for normality before tranformation
 ```{r}
 resi <- residuals(ols.fit)
 fitvalues <- fitted.values(ols.fit)
-plot(fitvalues,stdresi)
-abline(, col = "blue", lwd = 2)
+plot(fitvalues, resi)
+#abline(, col = "blue", lwd = 2)
 stdresi <- scale(resi)
 qqnorm(stdresi, ylab="Residuals")
 qqline(stdresi)
@@ -278,8 +263,8 @@ boxcox(ols.fit)
 
 Check for normality after transformation
 ```{r}
-ylog = (y_lasso^0.5)
-fit_normality_trans <- lm(ylog ~ X_lasso)
+y_sqrt = (y_lasso^0.5)
+fit_normality_trans <- lm(y_sqrt ~ X_lasso)
 resi <- residuals(fit_normality_trans)
 fitvalues_trans <- fitted.values(fit_normality_trans)
 fitdf <- data.frame(cbind(fitvalues_trans, resi))
@@ -291,6 +276,30 @@ qqnorm(stdresi, ylab="Residuals")
 qqline(stdresi)
 ks.test(stdresi, rnorm(length(stdresi)))
 ```
+
+```{r}
+myDf <- data.frame(y_sqrt = y_sqrt, X_lasso)
+#Fitting OLS Model
+ols.fit <- lm(y_sqrt~., data=myDf)
+
+significant_predictors <- data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
+X_lasso_significant <- X_lasso[, rownames(significant_predictors)[-1]]
+```
+
+Plotting pairwise collinearity
+```{r fig1, fig.cap = "Pairwise correlation plot", fig.height = 10, fig.width = 10}
+pairwise_cors <- cor(X_lasso)
+corrplot(pairwise_cors)
+vif_scores <- vif(ols.fit)
+vif_scores <- data.frame(vif(ols.fit))
+vif_scores['predictors'] <- rownames(vif_scores)
+rownames(vif_scores) <- NULL
+vif_scores <- vif_scores[, c(2, 1)]
+colnames(vif_scores) <- c('predictors', 'scores')
+knitr::kable(vif_scores[order(-vif_scores$scores), ],
+             caption = "VIF scores of significant predictors")
+```
+
 
 ## Prediction - Ridge
 ```{r}
