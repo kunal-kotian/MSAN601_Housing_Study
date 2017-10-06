@@ -261,7 +261,9 @@ Y_pred_Morty <- predict(ols.fit, data.frame(XMorty), interval="confidence", leve
 
 Figure 3 shows the variation of the mean squared error (MSE) with log($\lambda$), where $\lambda$ is the tuning parameter that adjusts the effect of the regularization penalty.  Based on the results of Lasso linear regression, the number of variables were reduced to **`r length(col_names)`**, corresponding to the value of $\lambda_{min}$ ($\lambda$ at minimum MSE) + 1 standard error.
 
+
 ## Checking for Normality
+
 
 ### Normality Check Before Tranformation
 
@@ -281,7 +283,7 @@ boxcox(ols.fit)
 
 ### Normality Check After Tranformation
 
-Check for normality after transformation
+
 ```{r}
 ylog = (y_lasso^0.5)
 fit_normality_trans <- lm(ylog ~ X_lasso)
