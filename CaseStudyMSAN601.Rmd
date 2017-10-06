@@ -5,7 +5,7 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: pdf_document
 ---
 
-```{r setup, include = FALSE, echo = F, message=FALSE, warning=F}
+```{r setup, include = F, echo = F, message = F, warning = F}
 # Prevent comments from running off the page (force line-wrapping for comments)
 knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE, cache = T)
 ```
@@ -33,9 +33,9 @@ library(corrplot)
 set.seed(1)
 ```
 
-```{r echo=F, warning=FALSE, message=FALSE}
+```{r echo=F, warning=F, message=F}
 # Load housing data
-housing <- read.csv('housing.txt', stringsAsFactors = FALSE)
+housing <- read.csv('housing.txt', stringsAsFactors = F)
 Mortydata <- read.csv('Morty.txt',stringsAsFactors = F)
 housing <- rbind(housing,Mortydata[,-1])
 housing <- tbl_df(housing)
@@ -45,9 +45,9 @@ housing <- tbl_df(housing)
 
 ## Missing Values
 
-The data loaded from `housing.txt` contained several missing values (`NA`s).  Table 1 shows a summary of the proportion of `NA`s in each column.  Figure 1 shows a visual overview of the missing data.
+The data loaded from `housing.txt` contained several missing values (`NA`s). Table 1 shows a summary of the proportion of `NA`s in each column.
 
-```{r echo=FALSE, warning=FALSE, message=FALSE}
+```{r echo=F, warning=F, message=F}
 # Counting ratio of NA's in each column
 na_count <- ((colSums(is.na(housing))/nrow(housing)) * 100) %>% round(1)
 # Summarising the columns which have NA count > 0
@@ -58,11 +58,11 @@ knitr::kable(na_df, caption = "% of NAs before cleaning", col.names = c("NAs (%)
 ```
 
 
-```{r fig1, fig.cap="Overview of the missing data", echo=F, message=FALSE, warning=F}
-mice_plot <- aggr(housing, col = c('navyblue','red'),
-                  numbers = T, sortVars = TRUE, 
-                  labels = names(housing), cex.axis = .7,
-                  gap = 3, ylab = c("Missing data","Pattern"), combined = F)
+```{r fig1, fig.cap="Overview of the missing data", echo=F, message=F, warning=F}
+#mice_plot <- aggr(housing, col = c('navyblue','red'),
+#                  numbers = T, sortVars = TRUE, 
+#                  labels = names(housing), cex.axis = .7,
+#                  gap = 3, ylab = c("Missing data","Pattern"), combined = F)
 ```
 
 
@@ -107,7 +107,7 @@ Table 2 shows a summary of the missing values left in the dataset after the `NA`
 
 `NA`s in `GarageYrBlt` and `GarageFinish` represent the cases in which a house does not have any garage. Imputing such missing values does not make sense i.e there is no proper way to represent these observations.  Hence, all rows with `NA`s in `GarageYrBlt` or `GarageFinish` were deleted.  Thus, we end up with a dataset that has no missing values.
 
-```{r echo=FALSE, warning=F, message=F}
+```{r echo=F, warning=F, message=F}
 # Applying clean data function on housing data set
 housing <- clean_data(housing)
 # Summarising NA ratio after cleaning
@@ -119,7 +119,7 @@ knitr::kable(sort(na_count[na_count > 0], decreasing = T),
 
 The variables were further analysed for ordered categorical variables. We found that some variables indicating quality or condition made more sense when they where ordered. For example, the variable `ExterQual` consisted of multiple levels such as 'Excellent', 'Poor' etc.  Such variables need to be considered as ordinal factors as there is an inherent order.
 
-```{r echo=FALSE, warning=F, message=F}
+```{r echo=F, warning=F, message=F}
 # We need to impute data for missing values in columns like LotFrontage and MasVnrArea
 # Also removing observations which have NA's in GarageYrBlt because NA's 
 # here represent that house does not have any garage and imputing here does 
@@ -140,7 +140,7 @@ impute_data <- function(df){
   ## Removing the observations which have NA values in GarageYrBlt
   df_imputed <- df_imputed[!is.na(df_imputed$GarageYrBlt), ]
   ## Imputing missing data with mice using CART method
-  df_cleaned <- mice(df_imputed, m = 1, method = 'cart', printFlag = FALSE)
+  df_cleaned <- mice(df_imputed, m = 1, method = 'cart', printFlag = F)
   df_cleaned <- mice::complete(df_cleaned)
   df_cleaned
 }
@@ -149,7 +149,7 @@ mortydata <- housing_cleaned[nrow(housing_cleaned),]
 housing_cleaned <- housing_cleaned[-nrow(housing_cleaned),]
 ```
 
-```{r echo=FALSE, warning=F, message=F}
+```{r echo=F, warning=F, message=F}
 # Summarising statistics of each column before and after imputation
 summary_area_df <- as.data.frame(unclass(summary(
   housing$MasVnrArea[!is.na(housing$MasVnrArea)])))
@@ -172,7 +172,7 @@ colnames(summary_area_clean_df) <- "value"
 Influential observations are those observations that have a distorting influence on a fitted linear regression model.  Influential points can end up adversely affecting the entire data analysis leading to incorrect conclusions.  Hence, before delving into further analysis, influential observations in the `housing` dataset were detected and removed.
 
 
-```{r fig2, fig.cap="Influence diagnostics using DfFits", echo=F, message=FALSE, warning=F}
+```{r fig2, fig.cap="Influence diagnostics using DfFits", echo=F, message=F, warning=F}
 X_influential = model.matrix(SalePrice ~., housing_cleaned)[,-1]
 y = housing_cleaned$SalePrice
 fit_influential_pts <- lm(y ~ X_influential)
@@ -194,12 +194,12 @@ housing_cleaned = housing_cleaned[-index_influential,]
 
 After the imputation/removal of missing values and removal of influential observations, only one level under `Utilities` was left in the dataset.  Since this made `Utilities` a redundant variable, it was removed altogether from the dataset.
 
-```{r echo=FALSE, warning=F, message=F}
+```{r echo=F, warning=F, message=F}
 # Checking if any column has only 1 level after removing influential points
 count_uniques <- sapply(housing_cleaned, function(x){ length(unique(x)) })
 ```
 
-```{r echo=FALSE, warning=F, message=F}
+```{r echo=F, warning=F, message=F}
 # As we can observe Utilities has only 1 level after removing influential points,
 # so we can remove the 'Utilities' column from our data set
 housing_cleaned$Utilities <- NULL
@@ -212,7 +212,7 @@ mortydata$Utilities <- NULL
 
 The cleaned dataset includes 79 variables.  To develop an explanatory model, it is essential to reduce the number of variables used.  Hence, the Lasso linear regression technique was employed to reduce the number of variables required for the model.
 
-```{r echo=FALSE, warning=F, message=F}
+```{r echo=F, warning=F, message=F}
 # Model matrix creation 
 mortyincluded <- rbind(housing_cleaned,mortydata)
 X = model.matrix(SalePrice ~.,mortyincluded)[,-1]
@@ -223,7 +223,7 @@ XMorty <- t(as.data.frame(XMorty))
 
 ## Variable Selection Using Lasso Regression
 
-```{r fig3, fig.cap="Variation of MSE with log(Lambda)", echo=F, message=FALSE, warning=F}
+```{r fig3, fig.cap="Variation of MSE with log(Lambda)", echo=F, message=F, warning=F}
 # Lasso for prediction
 X_lasso <- Xtrainingmodel
 yMorty <- mortydata$SalePrice
@@ -260,7 +260,7 @@ Figure 3 shows the variation of the mean squared error (MSE) with log($\lambda$)
 
 ### Normality Check Before Tranformation
 
-```{r fig4, fig.cap="Residual plot before transformation", echo=FALSE, warning=F, message=F}
+```{r fig4, fig.cap="Residual plot before transformation", echo=F, warning=F, message=F}
 # Check for normality before tranformation
 resi <- residuals(ols.fit)
 fitvalues <- fitted.values(ols.fit)
@@ -269,19 +269,19 @@ stdresi <- scale(resi)
 ks.test(stdresi, rnorm(length(stdresi)))
 ```
 
-```{r fig5, fig.cap="qqplot before transformation", echo=FALSE, warning=F, message=F}
+```{r fig5, fig.cap="qqplot before transformation", echo=F, warning=F, message=F}
 qqnorm(stdresi, ylab = "Residuals")
 qqline(stdresi)
 ```
 
-```{r fig6, fig.cap="boxcox plot", echo=FALSE, warning=F, message=F}
+```{r fig6, fig.cap="boxcox plot", echo=F, warning=F, message=F}
 boxcox(ols.fit)
 ```
 
 ### Normality Check After Tranformation
 
 
-```{r fig7, fig.cap="Residual plot before transformation", echo=FALSE, warning=F, message=F}
+```{r fig7, fig.cap="Residual plot before transformation", echo=F, warning=F, message=F}
 y_sqrt = (y_lasso^0.5)
 fit_normality_trans <- lm(y_sqrt ~ X_lasso)
 resi <- residuals(fit_normality_trans)
@@ -294,12 +294,12 @@ stdresi <- scale(resi)
 ks.test(stdresi, rnorm(length(stdresi)))
 ```
 
-```{r fig8, fig.cap="qqplot before transformation", echo=FALSE, warning=F, message=F}
+```{r fig8, fig.cap="qqplot before transformation", echo=F, warning=F, message=F}
 qqnorm(stdresi, ylab = "Residuals")
 qqline(stdresi)
 ```
 
-```{r}
+```{r echo=F, warning=F, message=F}
 myDf <- data.frame(y_sqrt = y_sqrt, X_lasso)
 #Fitting OLS Model
 ols.fit <- lm(y_sqrt~., data=myDf)
@@ -309,20 +309,10 @@ significant_predictors <- data.frame(summary(ols.fit)$coef[
 X_lasso_significant <- X_lasso[, rownames(significant_predictors)[-1]]
 ```
 
-## Predicting Morty's house value
-
-```{r}
-Y_pred_Morty <- predict(ols.fit, data.frame(XMorty_lasso),
-                        interval="confidence", level = 0.95)
-Y_pred_Morty <- Y_pred_Morty^2
-colnames(Y_pred_Morty) <- c('Fit prediction', 'Lower Bound', 'Upper Bound')
-knitr::kable(Y_pred_Morty, caption = "95% Confidence Interval of Morty's house")
-```
-
 \pagebreak
 
 ## Plotting pairwise collinearity
-```{r fig9, fig.cap = "Pairwise correlation plot", fig.height = 10, fig.width = 10}
+```{r fig9, fig.cap = "Pairwise correlation plot", fig.height = 10, fig.width = 10,echo=F, warning=F, message=F}
 pairwise_cors <- cor(X_lasso)
 corrplot(pairwise_cors)
 vif_scores <- vif(ols.fit)
@@ -337,52 +327,30 @@ knitr::kable(vif_scores[order(-vif_scores$scores), ],
 
 \pagebreak
 
-# Predictive Modelling
+## Predicting Morty's house value
 
-## Prediction - Ridge
-```{r}
-set.seed(48)
-
-X <- Xtrainingmodel
-y <- housing_cleaned$SalePrice
-
-grid <- 10^seq(10, -2, length = 100)
-
-#10 Fold Validation Ridge
-test <- sample(1:nrow(X), nrow(X)/5)
-train <- (-test)
-y.train <- y[train]
-y.test <- y[test]
-  
-ridge.mod <- glmnet(X[train,], y.train, alpha = 0)
-
-cv.out <- cv.glmnet(X[train,], y.train, alpha = 0)
-best.lambda <- cv.out$lambda.min
-
-
-ridge.pred <- predict(ridge.mod,s=best.lambda,newx=X[test,])
-mean((ridge.pred-y.test)^2)
-
-ridge.pred_morty=predict(ridge.mod,s=best.lambda,newx=XMorty)
-Morty_SalePrice = 143000
-diff_Morty = Morty_SalePrice - ridge.pred_morty
-
-residuals <- y.test - ridge.pred
-MSPE <- mean(residuals^2)
-lambda_min <- best.lambda
-
-
-diff_Morty
-
+```{r echo=F, warning=F, message=F}
+Y_pred_Morty <- predict(ols.fit, data.frame(XMorty_lasso),
+                        interval="confidence", level = 0.95)
+Y_pred_Morty <- Y_pred_Morty^2
+colnames(Y_pred_Morty) <- c('Fit prediction', 'Lower Bound', 'Upper Bound')
+knitr::kable(Y_pred_Morty, caption = "95% Confidence Interval of Morty's house")
 ```
+
+\pagebreak
+
+# Predictive Modelling
 
 
 ## Prediction-Elastic Net 
-```{r}
+```{r echo=F, warning=F, message=F}
+set.seed(48)
 diff_Morty <- numeric(10)
 MSPE <- numeric(10)
 lambda_min <- numeric(10)
 
+X <- Xtrainingmodel
+y <- housing_cleaned$SalePrice
 
 grid <- 1:10
 test <- sample(1:nrow(X), nrow(X)/5)
@@ -393,9 +361,6 @@ y.test <- y[test]
 j <- 0
 for (j in grid){
   alpha <- (j-1)/10
-  set.seed(48)
-
-  
   ridge.mod <- glmnet(X[train,], y.train, alpha = alpha)
 
   cv.out <- cv.glmnet(X[train,], y.train, alpha = alpha)
@@ -413,4 +378,17 @@ for (j in grid){
 lambda_min[j] <- best.lambda
 
 }
-plot(grid/10,MSPE)
+MSPE_ridge <- MSPE[1]
+MSPE_elastic <- MSPE[5]
+MSPE_lasso <- MSPE[10]
+```
+
+```{r fig10, fig.cap="MSPE v/s alpha", echo=F, warning=F, message=F}
+plot(grid/10,MSPE, type = 'b', xlab = 'alpha')
+```
+
+```{r ,echo=F, warning=F, message=F}
+models <- data.frame('model' = c("Ridge", "Elastic-Net", "Lasso"), 'MSPE' = c(MSPE_ridge, MSPE_elastic, MSPE_lasso))
+knitr::kable(models, caption = "Summary of all models for prediction")
+```
+
