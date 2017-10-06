@@ -5,9 +5,9 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: pdf_document
 ---
 
-```{r setup, include = FALSE, echo = F}
+```{r setup, include = FALSE, echo = F, message=FALSE, warning=F}
 # Prevent comments from running off the page (force line-wrapping for comments)
-knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE, cache = T)
 ```
 
 # Introduction
@@ -32,7 +32,7 @@ library(VIM)
 set.seed(1)
 ```
 
-```{r echo=F}
+```{r echo=F, warning=FALSE, message=FALSE}
 # Load housing data
 housing <- read.csv('housing.txt', stringsAsFactors = FALSE)
 Mortydata <- read.csv('Morty.txt',stringsAsFactors = F)
@@ -46,16 +46,17 @@ housing <- tbl_df(housing)
 
 The data loaded from `housing.txt` contained several missing values (`NA`s).  Table 1 shows a summary of the proportion of `NA`s in each column.  Figure 1 shows a visual overview of the missing data.
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE, message=FALSE}
 # Counting ratio of NA's in each column
 na_count <- ((colSums(is.na(housing))/nrow(housing)) * 100) %>% round(1)
 # Summarising the columns which have NA count > 0
+# Table 1
 knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
-             caption = "Ratio of NAs before cleaning")
+             caption = "% of NAs before cleaning", col.names = c("NAs (%)"))
 ```
 
 
-```{r fig1, fig.cap="Overview of the missing data", echo=F}
+```{r fig1, fig.cap="Overview of the missing data", echo=F, message=FALSE, warning=F}
 mice_plot <- aggr(housing, col = c('navyblue','red'),
                   numbers = T, sortVars = TRUE, 
                   labels = names(housing), cex.axis = .7,
@@ -65,9 +66,10 @@ mice_plot <- aggr(housing, col = c('navyblue','red'),
 
 ### Missing Values Which Are Not Really Missing
 
-In the case of several categorical variables, the data dictionary stated that `NA` represented a specific category denoting the absence of the entity tracked by the 
+In the case of several categorical variables, the data dictionary stated that `NA` represented a specific state/condition denoting the absence of the entity tracked by the categorical variable.  Such `NA` values are not truly missing values.  Hence, we replaced these instances of `NA`s with values denoting the state of absence of the entities tracked by the categorical variables - e.g. the value `NoBasement` indicates the absence of a basement.
 
-```{r}
+
+```{r echo=F, warning=F, message=F}
 # Defining function clean data which cleans the dataset
 # based on the description
 # For example: In Basement Quality column, NA represents 'No Basement' which is represented
@@ -97,26 +99,33 @@ clean_data <- function(df){
 }
 ```
 
-```{r}
+### Dealing with Missing Values
+
+Table 2 shows a summary of the missing values left in the dataset after the `NA`-replacement process described here was completed.  The missing values in variables `LotFrontage` and `MasVnrArea` were imputed using the package `mice`.
+
+`NA`s in `GarageYrBlt` and `GarageFinish` represent the cases in which a house does not have any garage. Imputing such missing values does not make sense i.e there is no proper way to represent these observations.  Hence, all rows with `NA`s in `GarageYrBlt` or `GarageFinish` were deleted.  Thus, we end up with a cleaned dataset that has no missing values.
+
+```{r echo=FALSE, warning=F, message=F}
 # Applying clean data function on housing data set
 housing <- clean_data(housing)
 # Summarising NA ratio after cleaning
-na_count <- colSums(is.na(housing))/nrow(housing)
+na_count <- ((colSums(is.na(housing))/nrow(housing)) * 100) %>% round(1)
+# Table 2
 knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
-             caption = "Ratio of NAs after cleaning")
-
+             caption = "Ratio of NAs after cleaning", col.names = c("NAs (%)"))
 ```
 
-```{r}
+
+```{r echo=FALSE, warning=F, message=F}
 # We need to impute data for missing values in columns like LotFrontage and MasVnrArea
-# Also removing observations which have NA's in GarageYrBlt because NA's here represent
-# that house does not have any garage and imputing here does not make sense i.e there
-# is no proper way to represent these observations.
+# Also removing observations which have NA's in GarageYrBlt because NA's 
+# here represent that house does not have any garage and imputing here does 
+# not make sense i.e there is no proper way to represent these observations.
 impute_data <- function(df){
   ## Convert character columns to factors
   df_imputed <- as.data.frame(unclass(df))
-  # Columns(ExterQual, ExterCond, HeatingQC, KitchenQual) which have a inherent order
-  # are converted to ordinal factors
+  # Columns(ExterQual, ExterCond, HeatingQC, KitchenQual) which have a 
+  # inherent order are converted to ordinal factors
   df$ExterQual <- ordered(df$ExterQual,
                           levels = c("Ex", "Gd", "TA", "Fa", "Po"))
   df$ExterCond <- ordered(df$ExterCond,
@@ -128,48 +137,46 @@ impute_data <- function(df){
   ## Removing the observations which have NA values in GarageYrBlt
   df_imputed <- df_imputed[!is.na(df_imputed$GarageYrBlt), ]
   ## Imputing missing data with mice using CART method
-  df_cleaned <- mice(df_imputed, m=1, method='cart', printFlag=FALSE)
+  df_cleaned <- mice(df_imputed, m = 1, method = 'cart', printFlag = FALSE)
   df_cleaned <- mice::complete(df_cleaned)
   df_cleaned
 }
 housing_cleaned <- impute_data(housing)
-mortydata <-housing_cleaned[nrow(housing_cleaned),]
+mortydata <- housing_cleaned[nrow(housing_cleaned),]
 housing_cleaned <- housing_cleaned[-nrow(housing_cleaned),]
 ```
 
-```{r}
+```{r echo=FALSE, warning=F, message=F}
 # Summarising statistics of each column before and after imputation
 summary_area_df <- as.data.frame(unclass(summary(
   housing$MasVnrArea[!is.na(housing$MasVnrArea)])))
 colnames(summary_area_df) <- "value"
-knitr::kable(summary_area_df, caption = "MasVnrArea column statistics before imputing")
+# knitr::kable(summary_area_df, caption = "MasVnrArea column statistics before imputing")
 summary_area_clean_df <- as.data.frame(unclass(summary(
   housing_cleaned$MasVnrArea[!is.na(housing$MasVnrArea)])))
 colnames(summary_area_clean_df) <- "value"
-knitr::kable(summary_area_clean_df,caption = "MasVnrArea column statistics after imputing")
+# knitr::kable(summary_area_clean_df,caption = "MasVnrArea column statistics after imputing")
 # Summarising sd of each column before and after imputation
-sd(housing$MasVnrArea[!is.na(housing$MasVnrArea)])
-sd(housing_cleaned$MasVnrArea)
+# sd(housing$MasVnrArea[!is.na(housing$MasVnrArea)])
+# sd(housing_cleaned$MasVnrArea)
 ```
 
----------------------------
 
-Influential points(Removed once)
+## Influential Points
+
 ```{r}
 X_influential = model.matrix(SalePrice ~., housing_cleaned)[,-1]
 y = housing_cleaned$SalePrice
-fit_influential_pts <-  lm(y ~ X_influential)
+fit_influential_pts <- lm(y ~ X_influential)
 n <- nrow(X_influential)
-k <- length(fit_influential_pts$coefficients)-1
+k <- length(fit_influential_pts$coefficients) - 1
 cv <- 2*sqrt(k/n)
 plot(dffits(fit_influential_pts), 
      ylab = "Standardized dfFits", xlab = "Index", 
-     main = paste("Standardized DfFits, \n critical value = 2*sqrt(k/n) = +/-",
-                  round(cv,3)),
-     ylim = c(-5,5))
+     main = paste("Standardized DfFits, \n critical value = 2*sqrt(k/n) = +/-", round(cv,3)), ylim = c(-5,5))
 abline(h = cv, lty = 2)
 abline(h = -cv, lty = 2)
-index_influential = which(dffits(fit_influential_pts)> cv | dffits(fit_influential_pts)< -cv)
+index_influential = which(dffits(fit_influential_pts) > cv | dffits(fit_influential_pts) < -cv)
 housing_cleaned = housing_cleaned[-index_influential,]
 ```
 
