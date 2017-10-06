@@ -212,25 +212,25 @@ y_lasso = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
 grid.lambda <- 10^seq(10, -2, length = 1000)
 
 
-cv.out <- cv.glmnet(X, y, alpha = 1)
+cv.out <- cv.glmnet(X_lasso, y_lasso, alpha = 1)
 best.lambda <- cv.out$lambda.min
 plot(cv.out)
 abline(v = log(best.lambda), col = "blue", lwd = 2)
 
-lasso.model_best.lambda = glmnet(X, y, alpha = 1, lambda = best.lambda)
+lasso.model_best.lambda = glmnet(X_lasso, y_lasso, alpha = 1, lambda = best.lambda)
 cf = coef(lasso.model_best.lambda)
 
 # New Data Matrix
 col_names <- names(cf[-1,])[which(cf[-1,] != 0)]
-X <- X[,col_names]
+X_lasso <- X_lasso[,col_names]
 XMorty = XMorty[,col_names, drop = FALSE]
 
-myDf <- data.frame(y = y, X)
+myDf <- data.frame(y_lasso = y_lasso, X_lasso)
 #Fitting OLS Model
-ols.fit = lm(y~., data=myDf)
+ols.fit = lm(y_lasso~., data=myDf)
 ols.fit$coefficients
 
-Y_pred_Morty = predict(ols.fit, as.data.frame(XMorty), interval="confidence", level = 0.90)
+Y_pred_Morty = predict(ols.fit, as.data.frame(XMorty), interval="confidence", level = 0.95)
 
 #s = summary(ols.fit)
 significant_predictors = data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
