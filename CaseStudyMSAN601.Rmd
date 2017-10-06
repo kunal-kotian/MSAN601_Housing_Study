@@ -11,7 +11,7 @@ knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
 ```
 
 
-```{r message=F}
+```{r message=F,warning=F}
 # Load required packages
 library(tidyverse)
 library(magrittr)
@@ -28,6 +28,8 @@ set.seed(1)
 ```{r}
 # Load housing data
 housing <- read.csv('housing.txt', stringsAsFactors = FALSE)
+Mortydata <- read.csv('Morty.txt',stringsAsFactors = F)
+housing <- rbind(housing,Mortydata[,-1])
 housing <- tbl_df(housing)
 ```
 
@@ -111,6 +113,8 @@ impute_data <- function(df){
   df_cleaned
 }
 housing_cleaned <- impute_data(housing)
+mortydata <-housing_cleaned[nrow(housing_cleaned),]
+housing_cleaned <- housing_cleaned[-nrow(housing_cleaned),]
 ```
 
 ```{r}
@@ -163,6 +167,7 @@ table(housing_cleaned$Utilities)
 # As we can observe Utilities has only 1 level after removing influential points,
 # so we can remove the 'Utilities' column from our data set
 housing_cleaned$Utilities <- NULL
+mortydata$Utilities <- NULL
 ```
 
 Check for normality
@@ -194,21 +199,40 @@ qqline(stdresi)
 ks.test(stdresi, rnorm(length(stdresi)))
 ```
 
+Model matrix creation 
+```{r}
+mortyincluded <- rbind(housing_cleaned,mortydata)
+X = model.matrix(SalePrice ~.,mortyincluded)[,-1]
+XMorty <- X[nrow(X),]
+Xtrainingmodel <- X[-nrow(X),]
+dim(X)
+length(XMorty)
+XMorty <- t(as.data.frame(XMorty))
+```
+
+
+
 Lasso Variable Selection
 ```{r}
 # X_lasso = X[-nrow(housing_cleaned),]
 # y_lasso = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
-# fit_lasso <- glmnet(X_lasso, y_lasso, alpha = 1, lambda = grid.lambda)
-# # make predictions
+#fit_lasso <- glmnet(X_lasso, y_lasso, alpha = 1, lambda = grid.lambda)
+
 # y_lasso_hat <- predict(fit_lasso, X_lasso, type="response")
 # # summarize accuracy
 # mse_lasso <- colMeans((y_lasso - y_lasso_hat)^2)
 
+```
+
+Lasso for prediction
+```{r}
+
 X_lasso = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
-XMorty = X_lasso[nrow(X_lasso), , drop = FALSE]
-X_lasso = X_lasso[-nrow(housing_cleaned),]
-yMorty = housing_cleaned$SalePrice[nrow(housing_cleaned)]
-y_lasso = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
+
+# XMorty = X_lasso[nrow(X_lasso), , drop = FALSE]
+X_lasso = Xtrainingmodel
+yMorty = mortydata$SalePrice
+y_lasso = housing_cleaned$SalePrice
 grid.lambda <- 10^seq(10, -2, length = 1000)
 
 
@@ -222,8 +246,8 @@ cf = coef(lasso.model_best.lambda)
 
 # New Data Matrix
 col_names <- names(cf[-1,])[which(cf[-1,] != 0)]
-X_lasso <- X_lasso[,col_names]
-XMorty = XMorty[,col_names, drop = FALSE]
+X_lasso <- X_lasso[, col_names]
+XMorty <- XMorty[, col_names, drop = F]
 
 myDf <- data.frame(y_lasso = y_lasso, X_lasso)
 #Fitting OLS Model
