@@ -117,6 +117,7 @@ knitr::kable(sort(na_count[na_count > 0], decreasing = T),
              caption = "Ratio of NAs after cleaning", col.names = c("NAs (%)"))
 ```
 
+The variables were further analysed for ordered categorical variables. We found that some variables indicating quality or condition made more sense when they where ordered. For example, the variable `ExterQual` consisted of multiple levels such as 'Excellent', 'Poor' etc.  Such variables need to be considered as ordinal factors as they is a inherent rank.
 
 ```{r echo=FALSE, warning=F, message=F}
 # We need to impute data for missing values in columns like LotFrontage and MasVnrArea
