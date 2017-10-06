@@ -125,10 +125,10 @@ sd(housing_cleaned$MasVnrArea)
 
 Influential points(Removed once)
 ```{r}
-X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
+X_influential = model.matrix(SalePrice ~., housing_cleaned)[,-1]
 y = housing_cleaned$SalePrice
-fit <-  lm(y ~ X)
-n <- nrow(X)
+fit <-  lm(y ~ X_influential)
+n <- nrow(X_influential)
 k <- length(fit$coefficients)-1
 cv <- 2*sqrt(k/n)
 plot(dffits(fit), 
@@ -146,7 +146,6 @@ Check for normality
 
 ```{r}
 X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
-
 y = housing_cleaned$SalePrice
 fit <-  lm(y ~ X)
 resi <-  residuals(fit)
@@ -155,7 +154,6 @@ plot(fitvalues,resi)
 stdresi <- scale(resi)
 qqnorm(stdresi, ylab="Residuals")
 qqline(stdresi)
-
 ks.test(stdresi, rnorm(length(stdresi)))
 boxcox(fit)
 ```
@@ -174,6 +172,15 @@ qqline(stdresi)
 ks.test(stdresi, rnorm(length(stdresi)))
 
 ```
+
+---------------
+Kunal's New Lasso Code
+```{r}
+
+
+```
+
+
 
 ---------------
 Alvira
