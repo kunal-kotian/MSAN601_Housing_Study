@@ -164,15 +164,16 @@ colnames(summary_area_clean_df) <- "value"
 
 ## Influential Points
 
-Influential observations are those observations that have a distorting influence on a fitted linear regression model.  Influential points can end up adversely affecting the entire data analysis leading to incorrect conclusions.  Hence, before delving into further analysis, influential observations in the `housing` dataset were detected and removed. 
+Influential observations are those observations that have a distorting influence on a fitted linear regression model.  Influential points can end up adversely affecting the entire data analysis leading to incorrect conclusions.  Hence, before delving into further analysis, influential observations in the `housing` dataset were detected and removed.
 
-```{r}
+
+```{r fig2, fig.cap="Influence diagnostics using DfFits", echo=F, message=FALSE, warning=F}
 X_influential = model.matrix(SalePrice ~., housing_cleaned)[,-1]
 y = housing_cleaned$SalePrice
 fit_influential_pts <- lm(y ~ X_influential)
 n <- nrow(X_influential)
 k <- length(fit_influential_pts$coefficients) - 1
-cv <- 2*sqrt(k/n)
+cv <- 2 * sqrt(k/n)
 plot(dffits(fit_influential_pts), 
      ylab = "Standardized dfFits", xlab = "Index", 
      main = paste("Standardized DfFits, \n critical value = 2*sqrt(k/n) = +/-", round(cv,3)), ylim = c(-5,5))
@@ -182,7 +183,6 @@ index_influential = which(dffits(fit_influential_pts) > cv | dffits(fit_influent
 housing_cleaned = housing_cleaned[-index_influential,]
 ```
 
----------------------------------------------------------------------------
 
 Checking for redundant columns
 ```{r}
