@@ -201,30 +201,33 @@ housing_cleaned$Utilities <- NULL
 mortydata$Utilities <- NULL
 ```
 
+\pagebreak
 
-Model matrix creation 
-```{r}
+# Explanatory Model for Housing Prices
+
+The cleaned dataset includes 79 variables.  To develop an explanatory model, it is essential to reduce the number of variables used.  Hence, the Lasso linear regression technique was employed to reduce the number of variables required for the model.
+
+```{r echo=FALSE, warning=F, message=F}
+# Model matrix creation 
 mortyincluded <- rbind(housing_cleaned,mortydata)
 X = model.matrix(SalePrice ~.,mortyincluded)[,-1]
 XMorty <- X[nrow(X),]
 Xtrainingmodel <- X[-nrow(X),]
-dim(X)
-length(XMorty)
+# dim(X)
+# length(XMorty)
 XMorty <- t(as.data.frame(XMorty))
-
 ```
 
-Lasso for prediction
-```{r}
+## Variable Selection Using Lasso Regression
 
+```{r fig3, fig.cap="Variation of MSE with log(Lambda)", echo=F, message=FALSE, warning=F}
+# Lasso for prediction
 X_lasso <- model.matrix(SalePrice ~.,housing_cleaned)[,-1]
-
 # XMorty <- X_lasso[nrow(X_lasso), , drop = FALSE]
 X_lasso <- Xtrainingmodel
 yMorty <- mortydata$SalePrice
 y_lasso <- housing_cleaned$SalePrice
 grid.lambda <- 10^seq(10, -2, length = 1000)
-
 
 cv.out <- cv.glmnet(X_lasso, y_lasso, alpha = 1)
 best.lambda <- cv.out$lambda.1se
@@ -256,19 +259,27 @@ Y_pred_Morty <- predict(ols.fit, data.frame(XMorty), interval="confidence", leve
 
 ```
 
-Check for normality before tranformation
+Figure 3 shows the variation of the mean squared error (MSE) with log($\lambda$), where $\lambda$ is the tuning parameter that adjusts the effect of the regularization penalty.  Based on the results of Lasso linear regression, the number of variables were reduced to **`r length(col_names)`**, corresponding to the value of $\lambda_{min}$ ($\lambda$ at minimum MSE) + 1 standard error.
 
-```{r}
+## Checking for Normality
+
+### Normality Check Before Tranformation
+
+```{r echo=FALSE, warning=F, message=F}
+# Check for normality before tranformation
 resi <- residuals(ols.fit)
 fitvalues <- fitted.values(ols.fit)
 plot(fitvalues, resi)
 #abline(, col = "blue", lwd = 2)
 stdresi <- scale(resi)
-qqnorm(stdresi, ylab="Residuals")
+qqnorm(stdresi, ylab = "Residuals")
 qqline(stdresi)
 ks.test(stdresi, rnorm(length(stdresi)))
 boxcox(ols.fit)
 ```
+
+
+### Normality Check After Tranformation
 
 Check for normality after transformation
 ```{r}
