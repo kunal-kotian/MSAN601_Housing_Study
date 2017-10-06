@@ -214,14 +214,12 @@ XMorty <- t(as.data.frame(XMorty))
 
 Lasso Variable Selection
 ```{r}
-# X_lasso = X[-nrow(housing_cleaned),]
-# y_lasso = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
-#fit_lasso <- glmnet(X_lasso, y_lasso, alpha = 1, lambda = grid.lambda)
-
-# y_lasso_hat <- predict(fit_lasso, X_lasso, type="response")
-# # summarize accuracy
-# mse_lasso <- colMeans((y_lasso - y_lasso_hat)^2)
-
+set.seed(1)
+X_lasso <- Xtrainingmodel
+y_lasso <- housing_cleaned$SalePrice
+fit_lasso <- cv.glmnet(X_lasso, y_lasso, alpha = 1)
+best_lambda_lasso <- fit_lasso$lambda.min
+plot(fit_lasso)
 ```
 
 Lasso for prediction
