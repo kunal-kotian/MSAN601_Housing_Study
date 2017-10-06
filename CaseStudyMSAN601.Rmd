@@ -76,16 +76,9 @@ clean_data <- function(df){
 ```
 
 ```{r}
+# Applying clean data function on housing data set
 housing <- clean_data(housing)
-table(housing$Utilities)
-```
-
-```{r}
-#housing$Utilities <- NULL
-```
-
-
-```{r}
+# Summarising NA ratio after cleaning
 na_count <- colSums(is.na(housing))/nrow(housing)
 knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
              caption = "Ratio of NAs after cleaning")
@@ -93,10 +86,15 @@ knitr::kable(sort(na_count[na_count > 0], decreasing = T),
 ```
 
 ```{r}
+# We need to impute data for missing values in columns like LotFrontage and MasVnrArea
+# Also removing observations which have NA's in GarageYrBlt because NA's here represent
+# that house does not have any garage and imputing here does not make sense i.e there
+# is no proper way to represent these observations.
 impute_data <- function(df){
   ## Convert character columns to factors
   df_imputed <- as.data.frame(unclass(df))
-  ## ExterQual, ExterCond, HeatingQC, KitchenQual are ordinal factors
+  # Columns(ExterQual, ExterCond, HeatingQC, KitchenQual) which have a inherent order
+  # are converted to ordinal factors
   df$ExterQual <- ordered(df$ExterQual,
                           levels = c("Ex", "Gd", "TA", "Fa", "Po"))
   df$ExterCond <- ordered(df$ExterCond,
@@ -105,9 +103,9 @@ impute_data <- function(df){
                           levels = c("Ex", "Gd", "TA", "Fa", "Po"))
   df$KitchenQual <- ordered(df$ExterCond,
                             levels = c("Ex", "Gd", "TA", "Fa", "Po"))
-  ## Removing the data which has no year built
+  ## Removing the observations which have NA values in GarageYrBlt
   df_imputed <- df_imputed[!is.na(df_imputed$GarageYrBlt), ]
-  ## Imputing missing data with mice
+  ## Imputing missing data with mice using CART method
   df_cleaned <- mice(df_imputed, m=1, method='cart', printFlag=FALSE)
   df_cleaned <- mice::complete(df_cleaned)
   df_cleaned
@@ -116,6 +114,7 @@ housing_cleaned <- impute_data(housing)
 ```
 
 ```{r}
+# Summarising statistics of each column before and after imputation
 summary_area_df <- as.data.frame(unclass(summary(
   housing$MasVnrArea[!is.na(housing$MasVnrArea)])))
 colnames(summary_area_df) <- "value"
@@ -124,6 +123,7 @@ summary_area_clean_df <- as.data.frame(unclass(summary(
   housing_cleaned$MasVnrArea[!is.na(housing$MasVnrArea)])))
 colnames(summary_area_clean_df) <- "value"
 knitr::kable(summary_area_clean_df,caption = "MasVnrArea column statistics after imputing")
+# Summarising sd of each column before and after imputation
 sd(housing$MasVnrArea[!is.na(housing$MasVnrArea)])
 sd(housing_cleaned$MasVnrArea)
 ```
@@ -140,7 +140,9 @@ k <- length(fit_influential_pts$coefficients)-1
 cv <- 2*sqrt(k/n)
 plot(dffits(fit_influential_pts), 
      ylab = "Standardized dfFits", xlab = "Index", 
-     main = paste("Standardized DfFits, \n critical value = 2*sqrt(k/n) = +/-", round(cv,3)),ylim = c(-5,5))
+     main = paste("Standardized DfFits, \n critical value = 2*sqrt(k/n) = +/-",
+                  round(cv,3)),
+     ylim = c(-5,5))
 abline(h = cv, lty = 2)
 abline(h = -cv, lty = 2)
 index_influential = which(dffits(fit_influential_pts)> cv | dffits(fit_influential_pts)< -cv)
@@ -148,6 +150,8 @@ housing_cleaned = housing_cleaned[-index_influential,]
 ```
 
 ---------------------------------------------------------------------------
+
+Checking for redundant columns
 ```{r}
 # Checking if any column has only 1 level after removing influential points
 count_uniques <- sapply(housing_cleaned, function(x){ length(unique(x)) })
