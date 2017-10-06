@@ -210,24 +210,6 @@ XMorty <- t(as.data.frame(XMorty))
 
 ```
 
-
-
-<!-- Lasso Variable Selection -->
-<!-- ```{r} -->
-<!-- # Lasso model fit for variable selection -->
-<!-- set.seed(1) -->
-<!-- X_lasso <- Xtrainingmodel -->
-<!-- y_lasso <- housing_cleaned$SalePrice -->
-<!-- fit_lasso <- cv.glmnet(X_lasso, y_lasso, alpha = 1) -->
-<!-- best_lambda_lasso <- fit_lasso$lambda.min -->
-<!-- plot(fit_lasso) -->
-<!-- # Identify variables selected -->
-<!-- coeffs_lasso <- coef(fit_lasso, s = "lambda.1se") -->
-<!-- inds_lasso_fit <- which(coeffs_lasso != 0) -->
-<!-- variables <- row.names(coeffs_lasso)[inds_lasso_fit] -->
-<!-- variables<-variables[variables %in% '(Intercept)'] -->
-<!-- ``` -->
-
 Lasso for prediction
 ```{r}
 
