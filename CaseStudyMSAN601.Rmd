@@ -179,48 +179,48 @@ ks.test(stdresi, rnorm(length(stdresi)))
 Alvira
 
 ```{r}
-
-
-X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
-
-X = X[-nrow(housing_cleaned),]
-y = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
-
-
-
-grid.lambda <- 10^seq(10, -2, length = 100)
-
-#10 Fold Validation Lasso Selection
-# train <- sample(1:nrow(X), nrow(X) / 2)
-# test <- (-train)
-# y.train <- y[train]
-# y.test <- y[test]
-lasso.model.train <- glmnet(X, y, alpha = 1, lambda = grid.lambda)
-
-cv.out <- cv.glmnet(X, y, alpha = 1)
-best.lambda <- cv.out$lambda.min
-plot(cv.out)
-abline(v = log(best.lambda), col = "blue", lwd = 2)
-
-lasso.model_best.lambda = glmnet(X, y, alpha = 1, lambda = best.lambda)
-cf = coef(lasso.model_best.lambda)
-
-# New Data Matrix
-index_nonzeroCoeff = which(cf!=0) -1
-non_zeroCoef_names = cf@Dimnames[[1]][which(cf!=0)]
-X = X[,index_nonzeroCoeff]    
-
-#Fitting OLS Model
-ols.fit = lm(y~X)
-ols.fit$coefficients
-
-#checking normality
-qqnorm(residuals(ols.fit), ylab="Residuals")
-qqline(residuals(ols.fit))
-shapiro.test(ols.fit$residuals)
-
-#s = summary(ols.fit)
-significant_predictors = data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
+# 
+# 
+# X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
+# 
+# X = X[-nrow(housing_cleaned),]
+# y = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
+# 
+# 
+# 
+# grid.lambda <- 10^seq(10, -2, length = 100)
+# 
+# #10 Fold Validation Lasso Selection
+# # train <- sample(1:nrow(X), nrow(X) / 2)
+# # test <- (-train)
+# # y.train <- y[train]
+# # y.test <- y[test]
+# lasso.model.train <- glmnet(X, y, alpha = 1, lambda = grid.lambda)
+# 
+# cv.out <- cv.glmnet(X, y, alpha = 1)
+# best.lambda <- cv.out$lambda.min
+# plot(cv.out)
+# abline(v = log(best.lambda), col = "blue", lwd = 2)
+# 
+# lasso.model_best.lambda = glmnet(X, y, alpha = 1, lambda = best.lambda)
+# cf = coef(lasso.model_best.lambda)
+# 
+# # New Data Matrix
+# index_nonzeroCoeff = which(cf!=0) -1
+# non_zeroCoef_names = cf@Dimnames[[1]][which(cf!=0)]
+# X = X[,index_nonzeroCoeff]    
+# 
+# #Fitting OLS Model
+# ols.fit = lm(y~X)
+# ols.fit$coefficients
+# 
+# #checking normality
+# qqnorm(residuals(ols.fit), ylab="Residuals")
+# qqline(residuals(ols.fit))
+# shapiro.test(ols.fit$residuals)
+# 
+# #s = summary(ols.fit)
+# significant_predictors = data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
 
 ```
 
