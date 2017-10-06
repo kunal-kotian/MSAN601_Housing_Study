@@ -10,8 +10,16 @@ output: pdf_document
 knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
 ```
 
+# Introduction
 
-```{r message=F,warning=F}
+This report focuses on the analysis of the value of residential homes in Ames, Iowa.  Linear regression techniques were used to address the following key questions:
+
+-	What aspects of a house in Ames, IA most strongly influence its value?
+-	How can we predict house prices in Ames, IA?
+
+The report is divided into 3 main sections.  Section 1 describes the process of cleaning the housing data, Section 2 describes how an explanatory model was built for the housing data, and finally Section 3 focuses on predictive modeling for estimating housing prices.
+
+```{r message=F, warning=F, echo=F}
 # Load required packages
 library(tidyverse)
 library(magrittr)
@@ -23,7 +31,7 @@ library(car)
 set.seed(1)
 ```
 
-# Cleaning the Dataset
+# Cleaning the Housing Dataset
 
 ```{r}
 # Load housing data
@@ -215,12 +223,18 @@ XMorty <- t(as.data.frame(XMorty))
 
 Lasso Variable Selection
 ```{r}
+# Lasso model fit for variable selection
 set.seed(1)
 X_lasso <- Xtrainingmodel
 y_lasso <- housing_cleaned$SalePrice
 fit_lasso <- cv.glmnet(X_lasso, y_lasso, alpha = 1)
 best_lambda_lasso <- fit_lasso$lambda.min
 plot(fit_lasso)
+# Identify variables selected
+coeffs_lasso <- coef(fit_lasso, s = "lambda.1se")
+inds_lasso_fit <- which(coeffs_lasso != 0)
+variables <- row.names(coeffs_lasso)[inds_lasso_fit]
+variables<-variables[variables %ni% '(Intercept)']
 ```
 
 Lasso for prediction
