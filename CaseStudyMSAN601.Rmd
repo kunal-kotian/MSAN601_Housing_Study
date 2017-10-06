@@ -36,7 +36,9 @@ Vinay
 
 
 ```{r}
+# Counting ratio of NA's in each column
 na_count <- colSums(is.na(housing))/nrow(housing)
+# Summarising the columns which have NA count > 0
 knitr::kable(sort(na_count[na_count > 0], decreasing = T), 
              caption = "Ratio of NAs before cleaning")
 ```
@@ -44,6 +46,11 @@ knitr::kable(sort(na_count[na_count > 0], decreasing = T),
 ##Cleaning Data
 
 ```{r}
+# Defining function clean data which cleans the dataset
+# based on the description
+# For example: In Basement Quality column, NA represents 'No Basement' which is represented
+# as a new level for that category. In cases like MasVnrType column, where the data is actually
+# we defined the level as 'Missing Veneer Type'
 clean_data <- function(df){
   df$Id <- NULL
   df$PoolQC[is.na(df$PoolQC)] <- 'No Pool'
@@ -74,7 +81,7 @@ table(housing$Utilities)
 ```
 
 ```{r}
-housing$Utilities <- NULL
+#housing$Utilities <- NULL
 ```
 
 
@@ -141,6 +148,18 @@ housing_cleaned = housing_cleaned[-index_influential,]
 ```
 
 ---------------------------------------------------------------------------
+```{r}
+# Checking if any column has only 1 level after removing influential points
+count_uniques <- sapply(housing_cleaned, function(x){ length(unique(x)) })
+count_uniques[count_uniques == 1]
+table(housing_cleaned$Utilities)
+```
+
+```{r}
+# As we can observe Utilities has only 1 level after removing influential points,
+# so we can remove the 'Utilities' column from our data set
+housing_cleaned$Utilities <- NULL
+```
 
 Check for normality
 
