@@ -20,6 +20,7 @@ library(ISLR)
 library(mice)
 library(MASS)
 library(car)
+set.seed(1)
 ```
 
 # Cleaning the Dataset
@@ -88,6 +89,15 @@ knitr::kable(sort(na_count[na_count > 0], decreasing = T),
 impute_data <- function(df){
   ## Convert character columns to factors
   df_imputed <- as.data.frame(unclass(df))
+  ## ExterQual, ExterCond, HeatingQC, KitchenQual are ordinal factors
+  df$ExterQual <- ordered(df$ExterQual,
+                          levels = c("Ex", "Gd", "TA", "Fa", "Po"))
+  df$ExterCond <- ordered(df$ExterCond,
+                          levels = c("Ex", "Gd", "TA", "Fa", "Po"))
+  df$HeatingQC <- ordered(df$HeatingQC,
+                          levels = c("Ex", "Gd", "TA", "Fa", "Po"))
+  df$KitchenQual <- ordered(df$ExterCond,
+                            levels = c("Ex", "Gd", "TA", "Fa", "Po"))
   ## Removing the data which has no year built
   df_imputed <- df_imputed[!is.na(df_imputed$GarageYrBlt), ]
   ## Imputing missing data with mice
