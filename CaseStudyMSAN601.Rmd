@@ -170,34 +170,6 @@ housing_cleaned$Utilities <- NULL
 mortydata$Utilities <- NULL
 ```
 
-Check for normality
-
-```{r}
-X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
-y = housing_cleaned$SalePrice
-fit_normality <-  lm(y ~ X)
-resi <-  residuals(fit_normality)
-fitvalues <- fitted.values(fit_normality)
-plot(fitvalues,resi)
-stdresi <- scale(resi)
-qqnorm(stdresi, ylab="Residuals")
-qqline(stdresi)
-ks.test(stdresi, rnorm(length(stdresi)))
-boxcox(fit_normality)
-```
-
-Check for normality after transformation
-```{r}
-ylog = ((y^0.5 )-1)/0.5
-fit_normality_trans <-  lm(ylog ~ X)
-resi <-  residuals(fit_normality_trans)
-fitvalues_trans <- fitted.values(fit_normality_trans)
-plot(fitvalues_trans,resi)
-stdresi <- scale(resi)
-qqnorm(stdresi, ylab="Residuals")
-qqline(stdresi)
-ks.test(stdresi, rnorm(length(stdresi)))
-```
 
 Model matrix creation 
 ```{r}
@@ -258,9 +230,35 @@ Y_pred_Morty <- predict(ols.fit, data.frame(XMorty), interval="confidence", leve
 
 
 #s <- summary(ols.fit)
-significant_predictors <- data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
+#significant_predictors <- data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
 
 
+#X_lasso_significant <- X_lasso[, rownames(significant_predictors)[-1]]
+
+```
+
+```{r}
+resi <-  residuals(ols.fit)
+fitvalues <- fitted.values(ols.fit)
+plot(fitvalues,resi)
+stdresi <- scale(resi)
+qqnorm(stdresi, ylab="Residuals")
+qqline(stdresi)
+ks.test(stdresi, rnorm(length(stdresi)))
+boxcox(ols.fit)
+```
+
+Check for normality after transformation
+```{r}
+ylog = (y_lasso^0.5 -1)/0.5
+fit_normality_trans <- lm(ylog ~ X_lasso)
+resi <- residuals(fit_normality_trans)
+fitvalues_trans <- fitted.values(fit_normality_trans)
+plot(fitvalues_trans,resi)
+stdresi <- scale(resi)
+qqnorm(stdresi, ylab="Residuals")
+qqline(stdresi)
+ks.test(stdresi, rnorm(length(stdresi)))
 ```
 
 ## Prediction - Ridge
@@ -288,7 +286,7 @@ grid <- 10^seq(10, -2, length = 100)
 j <- 0
 for (j in 1:10) {
   alpha <- j/10
-for(i in 1:100)
+for(i in 1:10)
 {
 set.seed(i)
 test <- sample(1:nrow(X), nrow(X)/5)
