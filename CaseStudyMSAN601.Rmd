@@ -256,7 +256,7 @@ XMorty <- XMorty[, col_names, drop = F]
 myDf <- data.frame(y_lasso = y_lasso, X_lasso)
 #Fitting OLS Model
 ols.fit <- lm(y_lasso~., data=myDf)
-ols.fit$coefficients
+#ols.fit$coefficients
 
 
 Y_pred_Morty <- predict(ols.fit, data.frame(XMorty), interval="confidence", level = 0.95)
@@ -272,9 +272,10 @@ Y_pred_Morty <- predict(ols.fit, data.frame(XMorty), interval="confidence", leve
 
 Check for normality before tranformation
 ```{r}
-resi <-  residuals(ols.fit)
+resi <- residuals(ols.fit)
 fitvalues <- fitted.values(ols.fit)
-plot(fitvalues,resi)
+plot(fitvalues,stdresi)
+abline(, col = "blue", lwd = 2)
 stdresi <- scale(resi)
 qqnorm(stdresi, ylab="Residuals")
 qqline(stdresi)
@@ -284,11 +285,14 @@ boxcox(ols.fit)
 
 Check for normality after transformation
 ```{r}
-ylog = (y_lasso^0.5 -1)/0.5
+ylog = (y_lasso^0.5)
 fit_normality_trans <- lm(ylog ~ X_lasso)
 resi <- residuals(fit_normality_trans)
 fitvalues_trans <- fitted.values(fit_normality_trans)
+fitdf <- data.frame(cbind(fitvalues_trans, resi))
+resiplot<- lm(fitvalues_trans ~ resi, data = fitdf)
 plot(fitvalues_trans,resi)
+abline(resiplot, col = "red")
 stdresi <- scale(resi)
 qqnorm(stdresi, ylab="Residuals")
 qqline(stdresi)
@@ -349,7 +353,6 @@ lambda_min[j,i] <- best.lambda
 }
 }
 # plot(MSPE)
-lambda_min
 # diff_Morty
 
 ```
