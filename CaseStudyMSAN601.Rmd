@@ -117,7 +117,7 @@ knitr::kable(sort(na_count[na_count > 0], decreasing = T),
              caption = "Ratio of NAs after cleaning", col.names = c("NAs (%)"))
 ```
 
-The variables were further analysed for ordered categorical variables. We found that some variables indicating quality or condition made more sense when they where ordered. For example, the variable `ExterQual` consisted of multiple levels such as 'Excellent', 'Poor' etc.  Such variables need to be considered as ordinal factors as they is a inherent rank.
+The variables were further analysed for ordered categorical variables. We found that some variables indicating quality or condition made more sense when they where ordered. For example, the variable `ExterQual` consisted of multiple levels such as 'Excellent', 'Poor' etc.  Such variables need to be considered as ordinal factors as there is an inherent order.
 
 ```{r echo=FALSE, warning=F, message=F}
 # We need to impute data for missing values in columns like LotFrontage and MasVnrArea
@@ -154,11 +154,13 @@ housing_cleaned <- housing_cleaned[-nrow(housing_cleaned),]
 summary_area_df <- as.data.frame(unclass(summary(
   housing$MasVnrArea[!is.na(housing$MasVnrArea)])))
 colnames(summary_area_df) <- "value"
-# knitr::kable(summary_area_df, caption = "MasVnrArea column statistics before imputing")
+# knitr::kable(summary_area_df, 
+#              caption = "MasVnrArea column statistics before imputing")
 summary_area_clean_df <- as.data.frame(unclass(summary(
   housing_cleaned$MasVnrArea[!is.na(housing$MasVnrArea)])))
 colnames(summary_area_clean_df) <- "value"
-# knitr::kable(summary_area_clean_df,caption = "MasVnrArea column statistics after imputing")
+# knitr::kable(summary_area_clean_df,
+#              caption = "MasVnrArea column statistics after imputing")
 # Summarising sd of each column before and after imputation
 # sd(housing$MasVnrArea[!is.na(housing$MasVnrArea)])
 # sd(housing_cleaned$MasVnrArea)
@@ -179,7 +181,9 @@ k <- length(fit_influential_pts$coefficients) - 1
 cv <- 2 * sqrt(k/n)
 plot(dffits(fit_influential_pts), 
      ylab = "Standardized dfFits", xlab = "Index", 
-     main = paste("Standardized DfFits, \n critical value = 2*sqrt(k/n) = +/-", round(cv,3)), ylim = c(-5,5))
+     main = paste("Standardized DfFits,
+                  \n critical value = 2*sqrt(k/n) = +/-",
+                  round(cv,3)), ylim = c(-5,5))
 abline(h = cv, lty = 2)
 abline(h = -cv, lty = 2)
 index_influential = which(dffits(fit_influential_pts) > cv | dffits(fit_influential_pts) < -cv)
@@ -193,8 +197,6 @@ After the imputation/removal of missing values and removal of influential observ
 ```{r echo=FALSE, warning=F, message=F}
 # Checking if any column has only 1 level after removing influential points
 count_uniques <- sapply(housing_cleaned, function(x){ length(unique(x)) })
-# count_uniques[count_uniques == 1]
-# table(housing_cleaned$Utilities)
 ```
 
 ```{r echo=FALSE, warning=F, message=F}
@@ -216,8 +218,6 @@ mortyincluded <- rbind(housing_cleaned,mortydata)
 X = model.matrix(SalePrice ~.,mortyincluded)[,-1]
 XMorty <- X[nrow(X),]
 Xtrainingmodel <- X[-nrow(X),]
-# dim(X)
-# length(XMorty)
 XMorty <- t(as.data.frame(XMorty))
 ```
 
@@ -225,8 +225,6 @@ XMorty <- t(as.data.frame(XMorty))
 
 ```{r fig3, fig.cap="Variation of MSE with log(Lambda)", echo=F, message=FALSE, warning=F}
 # Lasso for prediction
-X_lasso <- model.matrix(SalePrice ~.,housing_cleaned)[,-1]
-# XMorty <- X_lasso[nrow(X_lasso), , drop = FALSE]
 X_lasso <- Xtrainingmodel
 yMorty <- mortydata$SalePrice
 y_lasso <- housing_cleaned$SalePrice
@@ -237,7 +235,8 @@ best.lambda <- cv.out$lambda.1se
 plot(cv.out)
 abline(v = log(best.lambda), col = "blue", lwd = 2)
 
-lasso.model_best.lambda <- glmnet(X_lasso, y_lasso, alpha = 1, lambda = best.lambda)
+lasso.model_best.lambda <- glmnet(X_lasso, y_lasso,
+                                  alpha = 1, lambda = best.lambda)
 cf <- coef(lasso.model_best.lambda)
 
 # New Data Matrix
@@ -248,18 +247,9 @@ XMorty_lasso <- XMorty[, col_names, drop = F]
 myDf <- data.frame(y_lasso = y_lasso, X_lasso)
 #Fitting OLS Model
 ols.fit <- lm(y_lasso~., data=myDf)
-#ols.fit$coefficients
 
-
-Y_pred_Morty <- predict(ols.fit, data.frame(XMorty_lasso), interval="confidence", level = 0.95)
-
-
-#s <- summary(ols.fit)
-#significant_predictors <- data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
-
-
-#X_lasso_significant <- X_lasso[, rownames(significant_predictors)[-1]]
-
+Y_pred_Morty <- predict(ols.fit, data.frame(XMorty_lasso),
+                        interval="confidence", level = 0.95)
 ```
 
 Figure 3 shows the variation of the mean squared error (MSE) with log($\lambda$), where $\lambda$ is the tuning parameter that adjusts the effect of the regularization penalty.  Based on the results of Lasso linear regression, the number of variables were reduced to **`r length(col_names)`**, corresponding to the value of $\lambda_{min}$ ($\lambda$ at minimum MSE) + 1 standard error.
@@ -275,7 +265,6 @@ Figure 3 shows the variation of the mean squared error (MSE) with log($\lambda$)
 resi <- residuals(ols.fit)
 fitvalues <- fitted.values(ols.fit)
 plot(fitvalues, resi)
-#abline(h = 0, col = "red")
 stdresi <- scale(resi)
 ks.test(stdresi, rnorm(length(stdresi)))
 ```
@@ -315,18 +304,22 @@ myDf <- data.frame(y_sqrt = y_sqrt, X_lasso)
 #Fitting OLS Model
 ols.fit <- lm(y_sqrt~., data=myDf)
 
-significant_predictors <- data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
+significant_predictors <- data.frame(summary(ols.fit)$coef[
+  summary(ols.fit)$coef[,4] <= .05, 4])
 X_lasso_significant <- X_lasso[, rownames(significant_predictors)[-1]]
 ```
 
 ## Predicting Morty's house value
 
 ```{r}
-Y_pred_Morty <- predict(ols.fit, data.frame(XMorty_lasso), interval="confidence", level = 0.95)
+Y_pred_Morty <- predict(ols.fit, data.frame(XMorty_lasso),
+                        interval="confidence", level = 0.95)
 Y_pred_Morty <- Y_pred_Morty^2
 colnames(Y_pred_Morty) <- c('Fit prediction', 'Lower Bound', 'Upper Bound')
 knitr::kable(Y_pred_Morty, caption = "95% Confidence Interval of Morty's house")
 ```
+
+\pagebreak
 
 ## Plotting pairwise collinearity
 ```{r fig9, fig.cap = "Pairwise correlation plot", fig.height = 10, fig.width = 10}
@@ -376,11 +369,9 @@ diff_Morty = Morty_SalePrice - ridge.pred_morty
 
 residuals <- y.test - ridge.pred
 MSPE <- mean(residuals^2)
-# hist(residuals)
 lambda_min <- best.lambda
 
 
-# plot(MSPE)
 diff_Morty
 
 ```
@@ -419,7 +410,6 @@ for (j in grid){
 
   residuals <- y.test - ridge.pred
   MSPE[j] <- mean(residuals^2)
-# hist(residuals)
 lambda_min[j] <- best.lambda
 
 }
