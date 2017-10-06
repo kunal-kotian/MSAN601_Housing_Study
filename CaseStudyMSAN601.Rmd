@@ -186,72 +186,77 @@ Kunal's New Lasso Code
 Alvira
 
 ```{r}
-
-
-X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
-
-X = X[-nrow(housing_cleaned),]
-y = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
-
-
-
-grid.lambda <- 10^seq(10, -2, length = 100)
-
-#10 Fold Validation Lasso Selection
-# train <- sample(1:nrow(X), nrow(X) / 2)
-# test <- (-train)
-# y.train <- y[train]
-# y.test <- y[test]
-lasso.model.train <- glmnet(X, y, alpha = 1, lambda = grid.lambda)
-
-cv.out <- cv.glmnet(X, y, alpha = 1)
-best.lambda <- cv.out$lambda.min
-plot(cv.out)
-abline(v = log(best.lambda), col = "blue", lwd = 2)
-
-lasso.model_best.lambda = glmnet(X, y, alpha = 1, lambda = best.lambda)
-cf = coef(lasso.model_best.lambda)
-
-# New Data Matrix
-index_nonzeroCoeff = which(cf!=0) -1
-non_zeroCoef_names = cf@Dimnames[[1]][which(cf!=0)]
-X = X[,index_nonzeroCoeff]    
-
-#Fitting OLS Model
-ols.fit = lm(y~X)
-ols.fit$coefficients
-
-#checking normality
-qqnorm(residuals(ols.fit), ylab="Residuals")
-qqline(residuals(ols.fit))
-shapiro.test(ols.fit$residuals)
-
-#s = summary(ols.fit)
-significant_predictors = data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
+# 
+# 
+# X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
+# 
+# X = X[-nrow(housing_cleaned),]
+# y = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
+# 
+# 
+# 
+# grid.lambda <- 10^seq(10, -2, length = 100)
+# 
+# #10 Fold Validation Lasso Selection
+# # train <- sample(1:nrow(X), nrow(X) / 2)
+# # test <- (-train)
+# # y.train <- y[train]
+# # y.test <- y[test]
+# lasso.model.train <- glmnet(X, y, alpha = 1, lambda = grid.lambda)
+# 
+# cv.out <- cv.glmnet(X, y, alpha = 1)
+# best.lambda <- cv.out$lambda.min
+# plot(cv.out)
+# abline(v = log(best.lambda), col = "blue", lwd = 2)
+# 
+# lasso.model_best.lambda = glmnet(X, y, alpha = 1, lambda = best.lambda)
+# cf = coef(lasso.model_best.lambda)
+# 
+# # New Data Matrix
+# index_nonzeroCoeff = which(cf!=0) -1
+# non_zeroCoef_names = cf@Dimnames[[1]][which(cf!=0)]
+# X = X[,index_nonzeroCoeff]    
+# 
+# #Fitting OLS Model
+# ols.fit = lm(y~X)
+# ols.fit$coefficients
+# 
+# #checking normality
+# qqnorm(residuals(ols.fit), ylab="Residuals")
+# qqline(residuals(ols.fit))
+# shapiro.test(ols.fit$residuals)
+# 
+# #s = summary(ols.fit)
+# significant_predictors = data.frame(summary(ols.fit)$coef[summary(ols.fit)$coef[,4] <= .05, 4])
 
 ```
 
 ## Prediction - Ridge
 ```{r}
 
+diff_Morty = numeric(50)
+MSPE = numeric(50)
+lambda_min= numeric(50)
 
-X = model.matrix(SalePrice ~.,housing_cleaned)[,-1]
 XMorty = X[-c(1:(nrow(X)-2)),]
-X = X[-nrow(housing_cleaned),]
-y = housing_cleaned$SalePrice[-nrow(housing_cleaned)]
-yMorty = housing_cleaned$SalePrice[nrow(housing_cleaned)]
+X = X[-nrow(X),]
+
+yMorty = ylog[length(ylog)]
+ylog = ylog[-length(ylog)]
+
 
 grid=10^seq(10,-2,length=100)
 
-
 #10 Fold Validation Ridge
 
-train <- sample(1:nrow(X), nrow(X)/2)
-test <- (-train)
-y.train <- y[train]
-y.test <- y[test]
+test <- sample(1:nrow(X), nrow(X)/4)
+train <- (-test)
+y.train <- ylog[train]
+y.test <- ylog[test]
 
-ridge.mod=glmnet(X[train,],y[train],alpha=0,lambda=grid)
+
+for(i in 1:50){
+ridge.mod=glmnet(X[train,],y.train,alpha=0,lambda=grid)
 
 cv.out <- cv.glmnet(X[train,], y.train, alpha = 0)
 best.lambda <- cv.out$lambda.min
@@ -263,10 +268,16 @@ mean((ridge.pred-y.test)^2)
 
 ridge.pred_morty=predict(ridge.mod,s=best.lambda,newx=XMorty)
 Morty_SalePrice = 143000
-Morty_Predicted = exp(ridge.pred_morty)
-diff = Morty_SalePrice - Morty_Predicted[2]
-diff
-
+Morty_Predicted = (ridge.pred_morty*0.5+1)^2
+diff_Morty[i] = Morty_SalePrice - Morty_Predicted[2]
+residuals = (y.test*0.5+1)^2 - (ridge.pred*0.5+1)^2
+MSPE[i] = mean(residuals^2)
+# hist(residuals)
+lambda_min[i] = best.lambda
+}
+plot(MSPE)
+lambda_min
+diff_Morty
 
 ```
 
