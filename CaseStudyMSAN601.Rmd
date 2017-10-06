@@ -257,6 +257,7 @@ Figure 3 shows the variation of the mean squared error (MSE) with log($\lambda$)
 
 ## Checking for Normality
 
+The tests and confidence intervals we use are based on the assumption of normal errors. Therefore, the residuals needs to be assessed for normality using a Q-Q plot and Kolmogorov-Smirnoff test for normality. We find that the residuals passes the test. But the Q-Q plot shows heteroskedasticity in residuals.
 
 ### Normality Check Before Tranformation
 
@@ -274,12 +275,14 @@ qqnorm(stdresi, ylab = "Residuals")
 qqline(stdresi)
 ```
 
+By doing a box-cox transform, we realised that `sqrt(y)` can be modelled with the design matrix better than `y`.
+
 ```{r fig6, fig.cap="boxcox plot", echo=FALSE, warning=F, message=F}
 boxcox(ols.fit)
 ```
 
 ### Normality Check After Tranformation
-
+After transforming the y variables, a considerable decrease in heteroscedasticity was seen. The Q-Q plot also shows significant improvement after the transformation indicating the that transformed response variable adhere to normality more than untransformed variable
 
 ```{r fig7, fig.cap="Residual plot before transformation", echo=FALSE, warning=F, message=F}
 y_sqrt = (y_lasso^0.5)
@@ -289,7 +292,6 @@ fitvalues_trans <- fitted.values(fit_normality_trans)
 fitdf <- data.frame(cbind(fitvalues_trans, resi))
 resiplot<- lm(fitvalues_trans ~ resi, data = fitdf)
 plot(fitvalues_trans,resi)
-abline(resiplot, col = "red")
 stdresi <- scale(resi)
 ks.test(stdresi, rnorm(length(stdresi)))
 ```
@@ -298,6 +300,8 @@ ks.test(stdresi, rnorm(length(stdresi)))
 qqnorm(stdresi, ylab = "Residuals")
 qqline(stdresi)
 ```
+Since the normality assumption is valid, we can now run an Ordinary least squares on the reduced set of varaibles from Lasso. 
+We can then extract a subset of variables which are statistically significant. This model can be used to explain the Salesprice.
 
 ```{r}
 myDf <- data.frame(y_sqrt = y_sqrt, X_lasso)
@@ -414,3 +418,4 @@ lambda_min[j] <- best.lambda
 
 }
 plot(grid/10,MSPE)
+```
